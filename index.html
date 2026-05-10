@@ -8,190 +8,321 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════ -->
 <header>
-  <div class="logo-placeholder">
+  <div class="logo-placeholder" onclick="goHome()" style="cursor:pointer">
     <div class="logo-icon">S</div>
     <span class="logo-name">SEVK</span>
   </div>
   <div class="header-right">
     <span class="header-tag">24×7 HOME SERVICES</span>
-    <div class="auth-buttons">
-      <button class="btn-login" onclick="openModal('login')">Log In</button>
+
+    <!-- Guest buttons -->
+    <div class="auth-buttons" id="guest-buttons">
+      <button class="btn-login"  onclick="openModal('login')">Log In</button>
       <button class="btn-signup" onclick="openModal('signup')">Sign Up</button>
+    </div>
+
+    <!-- Logged-in user -->
+    <div class="user-menu" id="user-menu" style="display:none">
+      <div class="user-avatar" id="user-avatar"></div>
+      <span class="user-name" id="user-name"></span>
+      <button class="btn-logout" onclick="logout()">Log Out</button>
     </div>
   </div>
 </header>
 
-<!-- Auth Modal -->
+<!-- ══════════════════════════════════════════
+     AUTH MODAL
+══════════════════════════════════════════ -->
 <div class="modal-overlay" id="auth-modal" onclick="closeModalOnOverlay(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">&times;</button>
 
-    <!-- Tabs -->
     <div class="modal-tabs">
-      <button class="modal-tab active" id="tab-login" onclick="switchTab('login')">Log In</button>
-      <button class="modal-tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+      <button class="modal-tab active" id="tab-login"  onclick="switchTab('login')">Log In</button>
+      <button class="modal-tab"        id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
     </div>
 
-    <!-- Login Form -->
+    <!-- Login -->
     <div id="modal-login">
       <h2 class="modal-title">Welcome back</h2>
       <p class="modal-sub">Log in to manage your bookings.</p>
-      <div class="form-group">
+      <div class="form-group" id="li-fg-email">
         <label for="li-email">Email Address</label>
         <input type="email" id="li-email" placeholder="john@example.com" />
+        <span class="field-error">Please enter a valid email.</span>
       </div>
-      <div class="form-group">
+      <div class="form-group" id="li-fg-pass">
         <label for="li-pass">Password</label>
         <input type="password" id="li-pass" placeholder="••••••••" />
+        <span class="field-error">Please enter your password.</span>
       </div>
-      <button class="btn btn-primary modal-submit">Log In</button>
+      <div class="modal-error" id="li-error"></div>
+      <button class="btn btn-primary modal-submit" onclick="doLogin()">Log In</button>
       <p class="modal-switch">Don't have an account? <a href="#" onclick="switchTab('signup')">Sign Up</a></p>
     </div>
 
-    <!-- Signup Form -->
+    <!-- Sign Up -->
     <div id="modal-signup" style="display:none">
       <h2 class="modal-title">Create an account</h2>
       <p class="modal-sub">Sign up to track and manage your bookings.</p>
       <div class="form-row">
-        <div class="form-group">
+        <div class="form-group" id="su-fg-fname">
           <label for="su-fname">First Name</label>
           <input type="text" id="su-fname" placeholder="John" />
+          <span class="field-error">Required.</span>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="su-fg-lname">
           <label for="su-lname">Last Name</label>
           <input type="text" id="su-lname" placeholder="Smith" />
+          <span class="field-error">Required.</span>
         </div>
       </div>
-      <div class="form-group">
+      <div class="form-group" id="su-fg-email">
         <label for="su-email">Email Address</label>
         <input type="email" id="su-email" placeholder="john@example.com" />
+        <span class="field-error">Please enter a valid email.</span>
       </div>
-      <div class="form-group">
+      <div class="form-group" id="su-fg-pass">
         <label for="su-pass">Password</label>
         <input type="password" id="su-pass" placeholder="Min. 8 characters" />
+        <span class="field-error">Password must be at least 8 characters.</span>
       </div>
-      <button class="btn btn-primary modal-submit">Create Account</button>
+      <div class="modal-error" id="su-error"></div>
+      <button class="btn btn-primary modal-submit" onclick="doSignup()">Create Account</button>
       <p class="modal-switch">Already have an account? <a href="#" onclick="switchTab('login')">Log In</a></p>
     </div>
   </div>
 </div>
 
-<!-- Progress indicator -->
-<div class="progress-bar">
-  <div class="step-indicator active" id="ind-1">
-    <span class="step-dot">1</span>
-    <span class="step-label">Service</span>
-  </div>
-  <div class="step-indicator" id="ind-2">
-    <span class="step-dot">2</span>
-    <span class="step-label">Date & Time</span>
-  </div>
-  <div class="step-indicator" id="ind-3">
-    <span class="step-dot">3</span>
-    <span class="step-label">Details</span>
-  </div>
-  <div class="step-indicator" id="ind-4">
-    <span class="step-dot">4</span>
-    <span class="step-label">Confirm</span>
-  </div>
-</div>
+<!-- ══════════════════════════════════════════
+     LANDING PAGE  (guests only)
+══════════════════════════════════════════ -->
+<div id="landing-page">
 
-<main>
-
-  <!-- Step 1: Service Selection -->
-  <div class="step-card active" id="step-1">
-    <p class="step-title">Choose a Service</p>
-    <p class="step-sub">Select the type of home service you need.</p>
-    <div class="services-grid" id="services-grid"></div>
-    <div class="btn-actions">
-      <button class="btn btn-primary" id="s1-next" style="margin-left:auto" onclick="goStep(2)">
-        Next &rarr;
-      </button>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">⚡ Available 24 Hours, 7 Days a Week</div>
+      <h1 class="hero-title">Home Services,<br>Booked in Minutes</h1>
+      <p class="hero-sub">Electricians, plumbers, wall specialists and glass works — all in one place. Pick a time that suits you and we'll handle the rest.</p>
+      <div class="hero-cta">
+        <button class="btn-hero-primary" onclick="openModal('signup')">Get Started — It's Free</button>
+        <button class="btn-hero-secondary" onclick="openModal('login')">Log In to Book</button>
+      </div>
+      <p class="hero-note">No credit card required &nbsp;·&nbsp; Instant booking reference</p>
     </div>
-  </div>
-
-  <!-- Step 2: Date & Time -->
-  <div class="step-card" id="step-2">
-    <p class="step-title">Pick a Date & Time</p>
-    <p class="step-sub">Choose your preferred appointment date and time slot.</p>
-
-    <div class="calendar-header">
-      <button class="cal-nav" id="prev-month" onclick="changeMonth(-1)">&#8249;</button>
-      <h3 id="month-label"></h3>
-      <button class="cal-nav" id="next-month" onclick="changeMonth(1)">&#8250;</button>
+    <div class="hero-visual">
+      <div class="hero-card">
+        <div class="hc-row"><span class="hc-emoji">⚡</span><span>Electrician booked</span><span class="hc-tag confirmed">Confirmed</span></div>
+        <div class="hc-divider"></div>
+        <div class="hc-row"><span class="hc-emoji">🔧</span><span>Plumber booked</span><span class="hc-tag pending">Pending</span></div>
+        <div class="hc-divider"></div>
+        <div class="hc-row"><span class="hc-emoji">🪟</span><span>Glass Works booked</span><span class="hc-tag confirmed">Confirmed</span></div>
+        <div class="hc-ref">Ref: <strong>SVK-AB12CD</strong></div>
+      </div>
     </div>
+  </section>
 
-    <div class="calendar-grid" id="calendar-grid"></div>
-
-    <div id="time-slots-container"></div>
-
-    <div class="btn-actions">
-      <button class="btn btn-secondary" onclick="goStep(1)">&larr; Back</button>
-      <button class="btn btn-primary" onclick="goStep(3)">Next &rarr;</button>
-    </div>
-  </div>
-
-  <!-- Step 3: Customer Details -->
-  <div class="step-card" id="step-3">
-    <p class="step-title">Your Details</p>
-    <p class="step-sub">Fill in your contact and address information.</p>
-
-    <!-- Booking summary -->
-    <div class="summary-panel" id="summary-panel"></div>
-
-    <form id="details-form" novalidate>
-      <div class="form-row">
-        <div class="form-group" id="fg-name">
-          <label for="inp-name">Full Name *</label>
-          <input type="text" id="inp-name" placeholder="e.g. John Smith" autocomplete="name" />
-          <span class="field-error">Please enter your name.</span>
+  <!-- Services -->
+  <section class="land-section">
+    <div class="land-container">
+      <h2 class="section-title">Our Services</h2>
+      <p class="section-sub">Professional tradespeople available around the clock.</p>
+      <div class="land-services">
+        <div class="land-svc-card">
+          <span class="land-svc-emoji">⚡</span>
+          <h3>Electrician</h3>
+          <p>Wiring, panels, fault finding & repairs</p>
         </div>
-        <div class="form-group" id="fg-phone">
-          <label for="inp-phone">Phone Number *</label>
-          <input type="tel" id="inp-phone" placeholder="e.g. 07700 900123" autocomplete="tel" />
-          <span class="field-error">Please enter a valid phone number.</span>
+        <div class="land-svc-card">
+          <span class="land-svc-emoji">🔧</span>
+          <h3>Plumber</h3>
+          <p>Leaks, pipe bursts & full installations</p>
+        </div>
+        <div class="land-svc-card">
+          <span class="land-svc-emoji">🧱</span>
+          <h3>Wall Specialists</h3>
+          <p>Plastering, drywall & surface finishes</p>
+        </div>
+        <div class="land-svc-card">
+          <span class="land-svc-emoji">🪟</span>
+          <h3>Glass Works</h3>
+          <p>Windows, doors, glazing & replacements</p>
         </div>
       </div>
-      <div class="form-group" id="fg-email">
-        <label for="inp-email">Email Address *</label>
-        <input type="email" id="inp-email" placeholder="e.g. john@example.com" autocomplete="email" />
-        <span class="field-error">Please enter a valid email address.</span>
-      </div>
-      <div class="form-group" id="fg-address">
-        <label for="inp-address">Full Address *</label>
-        <input type="text" id="inp-address" placeholder="Street, City, Postcode" autocomplete="street-address" />
-        <span class="field-error">Please enter your address.</span>
-      </div>
-      <div class="form-group">
-        <label for="inp-notes">Additional Notes <span style="font-weight:400;color:#888">(optional)</span></label>
-        <textarea id="inp-notes" placeholder="Any extra details, access instructions, etc."></textarea>
-      </div>
-    </form>
+    </div>
+  </section>
 
-    <div class="btn-actions">
-      <button class="btn btn-secondary" onclick="goStep(2)">&larr; Back</button>
-      <button class="btn btn-primary" onclick="submitBooking()">Confirm Booking &rarr;</button>
+  <!-- How it works -->
+  <section class="land-section land-section--dark">
+    <div class="land-container">
+      <h2 class="section-title" style="color:#fff">How It Works</h2>
+      <p class="section-sub" style="color:#aaa">Four simple steps to get the help you need.</p>
+      <div class="steps-row">
+        <div class="how-step">
+          <div class="how-num">1</div>
+          <h4>Choose a Service</h4>
+          <p>Pick from our range of trusted home services.</p>
+        </div>
+        <div class="how-arrow">→</div>
+        <div class="how-step">
+          <div class="how-num">2</div>
+          <h4>Pick Date & Time</h4>
+          <p>Select any slot across the full 24-hour day.</p>
+        </div>
+        <div class="how-arrow">→</div>
+        <div class="how-step">
+          <div class="how-num">3</div>
+          <h4>Enter Your Details</h4>
+          <p>Tell us where you are and any special notes.</p>
+        </div>
+        <div class="how-arrow">→</div>
+        <div class="how-step">
+          <div class="how-num">4</div>
+          <h4>Get Confirmed</h4>
+          <p>Receive an instant booking reference number.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA banner -->
+  <section class="land-cta-banner">
+    <div class="land-container" style="text-align:center">
+      <h2>Ready to book?</h2>
+      <p>Create a free account and get your first booking done in under 2 minutes.</p>
+      <button class="btn-hero-primary" onclick="openModal('signup')">Sign Up &amp; Book Now</button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="land-container footer-inner">
+      <div class="footer-brand">
+        <div class="logo-icon" style="display:inline-flex">S</div>
+        <span class="logo-name">SEVK</span>
+      </div>
+      <p class="footer-copy">&copy; 2026 Sevk. All rights reserved. &nbsp;·&nbsp; MIT License</p>
+    </div>
+  </footer>
+
+</div><!-- /landing-page -->
+
+<!-- ══════════════════════════════════════════
+     BOOKING APP  (logged-in users only)
+══════════════════════════════════════════ -->
+<div id="booking-app" style="display:none">
+
+  <!-- Progress indicator -->
+  <div class="progress-bar">
+    <div class="step-indicator active" id="ind-1">
+      <span class="step-dot">1</span>
+      <span class="step-label">Service</span>
+    </div>
+    <div class="step-indicator" id="ind-2">
+      <span class="step-dot">2</span>
+      <span class="step-label">Date & Time</span>
+    </div>
+    <div class="step-indicator" id="ind-3">
+      <span class="step-dot">3</span>
+      <span class="step-label">Details</span>
+    </div>
+    <div class="step-indicator" id="ind-4">
+      <span class="step-dot">4</span>
+      <span class="step-label">Confirm</span>
     </div>
   </div>
 
-  <!-- Step 4: Confirmation -->
-  <div class="step-card" id="step-4">
-    <div class="confirm-icon">&#10003;</div>
-    <p class="confirm-title">Booking Confirmed!</p>
-    <p class="confirm-sub">We'll be in touch shortly to confirm your appointment.</p>
-    <div class="confirm-ref">
-      <p>Your booking reference</p>
-      <span class="ref-number" id="ref-number"></span>
-    </div>
-    <div class="confirm-details" id="confirm-details"></div>
-    <button class="btn btn-new" onclick="resetBooking()">&#43; New Booking</button>
-  </div>
+  <main>
 
-</main>
+    <!-- Step 1 -->
+    <div class="step-card active" id="step-1">
+      <p class="step-title">Choose a Service</p>
+      <p class="step-sub">Select the type of home service you need.</p>
+      <div class="services-grid" id="services-grid"></div>
+      <div class="btn-actions">
+        <button class="btn btn-primary" style="margin-left:auto" onclick="goStep(2)">Next &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-card" id="step-2">
+      <p class="step-title">Pick a Date & Time</p>
+      <p class="step-sub">Choose your preferred appointment date and time slot.</p>
+      <div class="calendar-header">
+        <button class="cal-nav" onclick="changeMonth(-1)">&#8249;</button>
+        <h3 id="month-label"></h3>
+        <button class="cal-nav" onclick="changeMonth(1)">&#8250;</button>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+      <div id="time-slots-container"></div>
+      <div class="btn-actions">
+        <button class="btn btn-secondary" onclick="goStep(1)">&larr; Back</button>
+        <button class="btn btn-primary"   onclick="goStep(3)">Next &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-card" id="step-3">
+      <p class="step-title">Your Details</p>
+      <p class="step-sub">Fill in your contact and address information.</p>
+      <div class="summary-panel" id="summary-panel"></div>
+      <form id="details-form" novalidate>
+        <div class="form-row">
+          <div class="form-group" id="fg-name">
+            <label for="inp-name">Full Name *</label>
+            <input type="text" id="inp-name" placeholder="e.g. John Smith" autocomplete="name" />
+            <span class="field-error">Please enter your name.</span>
+          </div>
+          <div class="form-group" id="fg-phone">
+            <label for="inp-phone">Phone Number *</label>
+            <input type="tel" id="inp-phone" placeholder="e.g. 07700 900123" autocomplete="tel" />
+            <span class="field-error">Please enter a valid phone number.</span>
+          </div>
+        </div>
+        <div class="form-group" id="fg-email">
+          <label for="inp-email">Email Address *</label>
+          <input type="email" id="inp-email" placeholder="e.g. john@example.com" autocomplete="email" />
+          <span class="field-error">Please enter a valid email address.</span>
+        </div>
+        <div class="form-group" id="fg-address">
+          <label for="inp-address">Full Address *</label>
+          <input type="text" id="inp-address" placeholder="Street, City, Postcode" autocomplete="street-address" />
+          <span class="field-error">Please enter your address.</span>
+        </div>
+        <div class="form-group">
+          <label for="inp-notes">Additional Notes <span style="font-weight:400;color:#888">(optional)</span></label>
+          <textarea id="inp-notes" placeholder="Any extra details, access instructions, etc."></textarea>
+        </div>
+      </form>
+      <div class="btn-actions">
+        <button class="btn btn-secondary" onclick="goStep(2)">&larr; Back</button>
+        <button class="btn btn-primary"   onclick="submitBooking()">Confirm Booking &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-card" id="step-4">
+      <div class="confirm-icon">&#10003;</div>
+      <p class="confirm-title">Booking Confirmed!</p>
+      <p class="confirm-sub">We'll be in touch shortly to confirm your appointment.</p>
+      <div class="confirm-ref">
+        <p>Your booking reference</p>
+        <span class="ref-number" id="ref-number"></span>
+      </div>
+      <div class="confirm-details" id="confirm-details"></div>
+      <button class="btn btn-new" onclick="resetBooking()">&#43; New Booking</button>
+    </div>
+
+  </main>
+</div><!-- /booking-app -->
 
 <script>
-  /* ── Data ── */
+  /* ══ Data ══ */
   const SERVICES = [
     { id: 'electrician', emoji: '⚡', name: 'Electrician',      desc: 'Wiring, panels & repairs' },
     { id: 'plumber',     emoji: '🔧', name: 'Plumber',          desc: 'Leaks, pipes & installations' },
@@ -200,227 +331,122 @@
   ];
 
   const TIME_GROUPS = [
-    {
-      label: '🌅 Morning (6 AM – 12 PM)',
-      slots: ['6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM']
-    },
-    {
-      label: '☀️ Afternoon (12 PM – 6 PM)',
-      slots: ['12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM']
-    },
-    {
-      label: '🌙 Evening & Night (6 PM – 6 AM)',
-      slots: ['6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM','12:00 AM','1:00 AM','2:00 AM','3:00 AM','4:00 AM','5:00 AM']
-    },
+    { label: '🌅 Morning (6 AM – 12 PM)',        slots: ['6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM'] },
+    { label: '☀️ Afternoon (12 PM – 6 PM)',       slots: ['12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'] },
+    { label: '🌙 Evening & Night (6 PM – 6 AM)',  slots: ['6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM','12:00 AM','1:00 AM','2:00 AM','3:00 AM','4:00 AM','5:00 AM'] },
   ];
 
-  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-  /* ── State ── */
-  const state = {
-    step: 1,
-    service: null,
-    date: null,
-    time: null,
-    calYear: 0,
-    calMonth: 0,
-  };
+  /* ══ Booking state ══ */
+  const state = { step:1, service:null, date:null, time:null, calYear:0, calMonth:0 };
 
-  /* ── Init ── */
-  (function init() {
-    renderServices();
-    const today = new Date();
-    state.calYear = today.getFullYear();
-    state.calMonth = today.getMonth();
-    renderCalendar();
-    renderTimeSlots();
-  })();
-
-  /* ── Services ── */
-  function renderServices() {
-    const grid = document.getElementById('services-grid');
-    grid.innerHTML = SERVICES.map(s => `
-      <div class="service-card" id="svc-${s.id}" onclick="selectService('${s.id}')">
-        <span class="service-emoji">${s.emoji}</span>
-        <div class="service-name">${s.name}</div>
-        <div class="service-desc">${s.desc}</div>
-      </div>
-    `).join('');
+  /* ══════════════════════════════════════════
+     AUTH
+  ══════════════════════════════════════════ */
+  function getUser() {
+    try { return JSON.parse(localStorage.getItem('sevk_user')); } catch { return null; }
   }
 
-  function selectService(id) {
-    state.service = id;
-    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-    document.getElementById('svc-' + id).classList.add('selected');
-  }
+  function setUser(u) { localStorage.setItem('sevk_user', JSON.stringify(u)); }
+  function clearUser()  { localStorage.removeItem('sevk_user'); }
 
-  /* ── Calendar ── */
-  function renderCalendar() {
-    const { calYear, calMonth } = state;
-    document.getElementById('month-label').textContent = MONTHS[calMonth] + ' ' + calYear;
+  function applyAuthState() {
+    const user = getUser();
+    document.getElementById('landing-page').style.display  = user ? 'none' : '';
+    document.getElementById('booking-app').style.display   = user ? ''     : 'none';
+    document.getElementById('guest-buttons').style.display = user ? 'none' : '';
+    document.getElementById('user-menu').style.display     = user ? ''     : 'none';
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const firstDay = new Date(calYear, calMonth, 1).getDay();
-    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    if (user) {
+      const initials = (user.firstName[0] + (user.lastName ? user.lastName[0] : '')).toUpperCase();
+      document.getElementById('user-avatar').textContent = initials;
+      document.getElementById('user-name').textContent   = user.firstName;
 
-    let html = DAYS.map(d => `<div class="cal-day-label">${d}</div>`).join('');
-
-    for (let i = 0; i < firstDay; i++) {
-      html += '<div class="cal-day empty"></div>';
+      // Pre-fill step-3 form with account details
+      const nameEl = document.getElementById('inp-name');
+      const emailEl = document.getElementById('inp-email');
+      if (nameEl && !nameEl.value) nameEl.value = user.firstName + (user.lastName ? ' ' + user.lastName : '');
+      if (emailEl && !emailEl.value) emailEl.value = user.email;
     }
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const date = new Date(calYear, calMonth, d);
-      const isPast = date < today;
-      const isToday = date.getTime() === today.getTime();
-      const isSelected = state.date && state.date.getTime() === date.getTime();
-      let cls = 'cal-day';
-      if (isPast) cls += ' past';
-      if (isToday) cls += ' today';
-      if (isSelected) cls += ' selected';
-
-      const click = isPast ? '' : `onclick="selectDate(${calYear},${calMonth},${d})"`;
-      html += `<div class="${cls}" ${click}>${d}</div>`;
-    }
-
-    document.getElementById('calendar-grid').innerHTML = html;
   }
 
-  function changeMonth(dir) {
-    state.calMonth += dir;
-    if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
-    if (state.calMonth < 0)  { state.calMonth = 11; state.calYear--; }
-    renderCalendar();
-  }
-
-  function selectDate(y, m, d) {
-    state.date = new Date(y, m, d);
-    renderCalendar();
-  }
-
-  /* ── Time slots ── */
-  function renderTimeSlots() {
-    const container = document.getElementById('time-slots-container');
-    container.innerHTML = TIME_GROUPS.map(g => `
-      <div class="time-group-label">${g.label}</div>
-      <div class="time-slots">
-        ${g.slots.map(s => `
-          <div class="time-slot${state.time === s ? ' selected' : ''}" onclick="selectTime('${s}')">${s}</div>
-        `).join('')}
-      </div>
-    `).join('');
-  }
-
-  function selectTime(slot) {
-    state.time = slot;
-    renderTimeSlots();
-  }
-
-  /* ── Summary ── */
-  function renderSummary() {
-    const svc = SERVICES.find(s => s.id === state.service);
-    const dateStr = state.date
-      ? state.date.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
-      : '—';
-    document.getElementById('summary-panel').innerHTML = `
-      <div class="summary-row"><span>Service</span><span>${svc ? svc.emoji + ' ' + svc.name : '—'}</span></div>
-      <div class="summary-row"><span>Date</span><span>${dateStr}</span></div>
-      <div class="summary-row"><span>Time</span><span>${state.time || '—'}</span></div>
-    `;
-  }
-
-  /* ── Navigation ── */
-  function goStep(n) {
-    if (n === 2 && !state.service) {
-      alert('Please select a service first.');
-      return;
-    }
-    if (n === 3) {
-      if (!state.date) { alert('Please select a date.'); return; }
-      if (!state.time) { alert('Please select a time slot.'); return; }
-      renderSummary();
-    }
-    state.step = n;
-    document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
-    document.getElementById('step-' + n).classList.add('active');
-    updateIndicators(n);
+  function logout() {
+    clearUser();
+    resetBooking();
+    applyAuthState();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function updateIndicators(current) {
-    for (let i = 1; i <= 4; i++) {
-      const el = document.getElementById('ind-' + i);
-      el.classList.remove('active', 'done');
-      if (i < current) el.classList.add('done');
-      if (i === current) el.classList.add('active');
-      const dot = el.querySelector('.step-dot');
-      dot.textContent = i < current ? '✓' : i;
-    }
+  function goHome() {
+    const user = getUser();
+    if (!user) window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  /* ── Form validation ── */
-  function validateForm() {
-    let valid = true;
+  /* ── Login ── */
+  function doLogin() {
+    let ok = true;
 
-    function check(groupId, inputId, test) {
-      const fg = document.getElementById(groupId);
+    function chk(groupId, inputId, test) {
+      const fg  = document.getElementById(groupId);
       const val = document.getElementById(inputId).value.trim();
-      if (!test(val)) {
-        fg.classList.add('error');
-        valid = false;
-      } else {
-        fg.classList.remove('error');
-      }
+      const pass = test(val);
+      fg.classList.toggle('error', !pass);
+      if (!pass) ok = false;
     }
 
-    check('fg-name',    'inp-name',    v => v.length >= 2);
-    check('fg-phone',   'inp-phone',   v => /^[\d\s\+\-\(\)]{7,}$/.test(v));
-    check('fg-email',   'inp-email',   v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
-    check('fg-address', 'inp-address', v => v.length >= 5);
+    chk('li-fg-email', 'li-email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+    chk('li-fg-pass',  'li-pass',  v => v.length >= 1);
+    if (!ok) return;
 
-    return valid;
+    const email = document.getElementById('li-email').value.trim();
+    const stored = getUser();
+
+    // Accept if the email matches a previously signed-up account, or allow any login (demo)
+    const namePart = email.split('@')[0].replace(/[._]/g, ' ');
+    const firstName = stored && stored.email === email
+      ? stored.firstName
+      : namePart.charAt(0).toUpperCase() + namePart.slice(1);
+    const lastName = stored && stored.email === email ? stored.lastName : '';
+
+    setUser({ firstName, lastName, email });
+    closeModal();
+    initBooking();
+    applyAuthState();
   }
 
-  /* ── Booking reference ── */
-  function generateRef() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let ref = 'SVK-';
-    for (let i = 0; i < 6; i++) ref += chars[Math.floor(Math.random() * chars.length)];
-    return ref;
+  /* ── Sign up ── */
+  function doSignup() {
+    let ok = true;
+
+    function chk(groupId, inputId, test) {
+      const fg  = document.getElementById(groupId);
+      const val = document.getElementById(inputId).value.trim();
+      const pass = test(val);
+      fg.classList.toggle('error', !pass);
+      if (!pass) ok = false;
+    }
+
+    chk('su-fg-fname', 'su-fname', v => v.length >= 1);
+    chk('su-fg-lname', 'su-lname', v => v.length >= 1);
+    chk('su-fg-email', 'su-email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+    chk('su-fg-pass',  'su-pass',  v => v.length >= 8);
+    if (!ok) return;
+
+    setUser({
+      firstName: document.getElementById('su-fname').value.trim(),
+      lastName:  document.getElementById('su-lname').value.trim(),
+      email:     document.getElementById('su-email').value.trim(),
+    });
+    closeModal();
+    initBooking();
+    applyAuthState();
   }
 
-  /* ── Submit ── */
-  function submitBooking() {
-    if (!validateForm()) return;
-
-    const svc = SERVICES.find(s => s.id === state.service);
-    const ref = generateRef();
-    const dateStr = state.date.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-    const name    = document.getElementById('inp-name').value.trim();
-    const phone   = document.getElementById('inp-phone').value.trim();
-    const email   = document.getElementById('inp-email').value.trim();
-    const address = document.getElementById('inp-address').value.trim();
-    const notes   = document.getElementById('inp-notes').value.trim();
-
-    document.getElementById('ref-number').textContent = ref;
-
-    document.getElementById('confirm-details').innerHTML = `
-      <div class="confirm-row"><span class="ci">${svc.emoji}</span><span class="cl">Service</span><span class="cv">${svc.name}</span></div>
-      <div class="confirm-row"><span class="ci">📅</span><span class="cl">Date</span><span class="cv">${dateStr}</span></div>
-      <div class="confirm-row"><span class="ci">🕐</span><span class="cl">Time</span><span class="cv">${state.time}</span></div>
-      <div class="confirm-row"><span class="ci">👤</span><span class="cl">Name</span><span class="cv">${name}</span></div>
-      <div class="confirm-row"><span class="ci">📞</span><span class="cl">Phone</span><span class="cv">${phone}</span></div>
-      <div class="confirm-row"><span class="ci">✉️</span><span class="cl">Email</span><span class="cv">${email}</span></div>
-      <div class="confirm-row"><span class="ci">📍</span><span class="cl">Address</span><span class="cv">${address}</span></div>
-      ${notes ? `<div class="confirm-row"><span class="ci">📝</span><span class="cl">Notes</span><span class="cv">${notes}</span></div>` : ''}
-    `;
-
-    goStep(4);
-  }
-
-  /* ── Auth modal ── */
+  /* ══════════════════════════════════════════
+     MODAL HELPERS
+  ══════════════════════════════════════════ */
   function openModal(tab) {
     switchTab(tab);
     document.getElementById('auth-modal').classList.add('open');
@@ -445,18 +471,179 @@
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-  /* ── Reset ── */
-  function resetBooking() {
-    state.service = null;
-    state.date = null;
-    state.time = null;
-    document.getElementById('details-form').reset();
-    document.querySelectorAll('.form-group').forEach(fg => fg.classList.remove('error'));
+  /* ══════════════════════════════════════════
+     BOOKING APP
+  ══════════════════════════════════════════ */
+  function initBooking() {
     renderServices();
+    const today = new Date();
+    state.calYear  = today.getFullYear();
+    state.calMonth = today.getMonth();
     renderCalendar();
     renderTimeSlots();
+  }
+
+  /* ── Services ── */
+  function renderServices() {
+    document.getElementById('services-grid').innerHTML = SERVICES.map(s => `
+      <div class="service-card" id="svc-${s.id}" onclick="selectService('${s.id}')">
+        <span class="service-emoji">${s.emoji}</span>
+        <div class="service-name">${s.name}</div>
+        <div class="service-desc">${s.desc}</div>
+      </div>
+    `).join('');
+  }
+
+  function selectService(id) {
+    state.service = id;
+    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('svc-' + id).classList.add('selected');
+  }
+
+  /* ── Calendar ── */
+  function renderCalendar() {
+    const { calYear, calMonth } = state;
+    document.getElementById('month-label').textContent = MONTHS[calMonth] + ' ' + calYear;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const firstDay    = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+    let html = DAYS.map(d => `<div class="cal-day-label">${d}</div>`).join('');
+    for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(calYear, calMonth, d);
+      const isPast     = date < today;
+      const isToday    = date.getTime() === today.getTime();
+      const isSelected = state.date && state.date.getTime() === date.getTime();
+      let cls = 'cal-day' + (isPast ? ' past' : '') + (isToday ? ' today' : '') + (isSelected ? ' selected' : '');
+      const click = isPast ? '' : `onclick="selectDate(${calYear},${calMonth},${d})"`;
+      html += `<div class="${cls}" ${click}>${d}</div>`;
+    }
+    document.getElementById('calendar-grid').innerHTML = html;
+  }
+
+  function changeMonth(dir) {
+    state.calMonth += dir;
+    if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+    if (state.calMonth < 0)  { state.calMonth = 11; state.calYear--; }
+    renderCalendar();
+  }
+
+  function selectDate(y, m, d) {
+    state.date = new Date(y, m, d);
+    renderCalendar();
+  }
+
+  /* ── Time slots ── */
+  function renderTimeSlots() {
+    document.getElementById('time-slots-container').innerHTML = TIME_GROUPS.map(g => `
+      <div class="time-group-label">${g.label}</div>
+      <div class="time-slots">
+        ${g.slots.map(s => `
+          <div class="time-slot${state.time === s ? ' selected' : ''}" onclick="selectTime('${s}')">${s}</div>
+        `).join('')}
+      </div>
+    `).join('');
+  }
+
+  function selectTime(slot) { state.time = slot; renderTimeSlots(); }
+
+  /* ── Summary ── */
+  function renderSummary() {
+    const svc     = SERVICES.find(s => s.id === state.service);
+    const dateStr = state.date
+      ? state.date.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+      : '—';
+    document.getElementById('summary-panel').innerHTML = `
+      <div class="summary-row"><span>Service</span><span>${svc ? svc.emoji + ' ' + svc.name : '—'}</span></div>
+      <div class="summary-row"><span>Date</span><span>${dateStr}</span></div>
+      <div class="summary-row"><span>Time</span><span>${state.time || '—'}</span></div>
+    `;
+  }
+
+  /* ── Navigation ── */
+  function goStep(n) {
+    if (n === 2 && !state.service) { alert('Please select a service first.'); return; }
+    if (n === 3) {
+      if (!state.date) { alert('Please select a date.'); return; }
+      if (!state.time) { alert('Please select a time slot.'); return; }
+      renderSummary();
+    }
+    state.step = n;
+    document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
+    document.getElementById('step-' + n).classList.add('active');
+    updateIndicators(n);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateIndicators(current) {
+    for (let i = 1; i <= 4; i++) {
+      const el  = document.getElementById('ind-' + i);
+      el.classList.remove('active', 'done');
+      if (i < current) el.classList.add('done');
+      if (i === current) el.classList.add('active');
+      el.querySelector('.step-dot').textContent = i < current ? '✓' : i;
+    }
+  }
+
+  /* ── Form validation ── */
+  function validateForm() {
+    let valid = true;
+    function check(groupId, inputId, test) {
+      const fg  = document.getElementById(groupId);
+      const val = document.getElementById(inputId).value.trim();
+      fg.classList.toggle('error', !test(val));
+      if (!test(val)) valid = false;
+    }
+    check('fg-name',    'inp-name',    v => v.length >= 2);
+    check('fg-phone',   'inp-phone',   v => /^[\d\s\+\-\(\)]{7,}$/.test(v));
+    check('fg-email',   'inp-email',   v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+    check('fg-address', 'inp-address', v => v.length >= 5);
+    return valid;
+  }
+
+  /* ── Submit ── */
+  function submitBooking() {
+    if (!validateForm()) return;
+    const svc     = SERVICES.find(s => s.id === state.service);
+    const chars   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let ref = 'SVK-';
+    for (let i = 0; i < 6; i++) ref += chars[Math.floor(Math.random() * chars.length)];
+
+    const dateStr = state.date.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const name    = document.getElementById('inp-name').value.trim();
+    const phone   = document.getElementById('inp-phone').value.trim();
+    const email   = document.getElementById('inp-email').value.trim();
+    const address = document.getElementById('inp-address').value.trim();
+    const notes   = document.getElementById('inp-notes').value.trim();
+
+    document.getElementById('ref-number').textContent = ref;
+    document.getElementById('confirm-details').innerHTML = `
+      <div class="confirm-row"><span class="ci">${svc.emoji}</span><span class="cl">Service</span><span class="cv">${svc.name}</span></div>
+      <div class="confirm-row"><span class="ci">📅</span><span class="cl">Date</span><span class="cv">${dateStr}</span></div>
+      <div class="confirm-row"><span class="ci">🕐</span><span class="cl">Time</span><span class="cv">${state.time}</span></div>
+      <div class="confirm-row"><span class="ci">👤</span><span class="cl">Name</span><span class="cv">${name}</span></div>
+      <div class="confirm-row"><span class="ci">📞</span><span class="cl">Phone</span><span class="cv">${phone}</span></div>
+      <div class="confirm-row"><span class="ci">✉️</span><span class="cl">Email</span><span class="cv">${email}</span></div>
+      <div class="confirm-row"><span class="ci">📍</span><span class="cl">Address</span><span class="cv">${address}</span></div>
+      ${notes ? `<div class="confirm-row"><span class="ci">📝</span><span class="cl">Notes</span><span class="cv">${notes}</span></div>` : ''}
+    `;
+    goStep(4);
+  }
+
+  /* ── Reset ── */
+  function resetBooking() {
+    state.service = null; state.date = null; state.time = null;
+    const form = document.getElementById('details-form');
+    if (form) form.reset();
+    document.querySelectorAll('.form-group').forEach(fg => fg.classList.remove('error'));
+    initBooking();
     goStep(1);
   }
+
+  /* ══ Boot ══ */
+  applyAuthState();
+  if (getUser()) initBooking();
 </script>
 
 </body>
