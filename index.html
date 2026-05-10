@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sevk — Book a Home Service</title>
   <link rel="stylesheet" href="style.css" />
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -29,6 +31,7 @@
     <div class="user-menu" id="user-menu" style="display:none">
       <div class="user-avatar" id="user-avatar"></div>
       <span class="user-name" id="user-name"></span>
+      <button class="btn-my-bookings" onclick="showView('my-bookings')">My Bookings</button>
       <button class="btn-logout" onclick="logout()">Log Out</button>
     </div>
   </div>
@@ -61,7 +64,7 @@
         <span class="field-error">Please enter your password.</span>
       </div>
       <div class="modal-error" id="li-error"></div>
-      <button class="btn btn-primary modal-submit" onclick="doLogin()">Log In</button>
+      <button class="btn btn-primary modal-submit" id="li-btn" onclick="doLogin()">Log In</button>
       <p class="modal-switch">Don't have an account? <a href="#" onclick="switchTab('signup')">Sign Up</a></p>
     </div>
 
@@ -92,7 +95,7 @@
         <span class="field-error">Password must be at least 8 characters.</span>
       </div>
       <div class="modal-error" id="su-error"></div>
-      <button class="btn btn-primary modal-submit" onclick="doSignup()">Create Account</button>
+      <button class="btn btn-primary modal-submit" id="su-btn" onclick="doSignup()">Create Account</button>
       <p class="modal-switch">Already have an account? <a href="#" onclick="switchTab('login')">Log In</a></p>
     </div>
   </div>
@@ -103,14 +106,13 @@
 ══════════════════════════════════════════ -->
 <div id="landing-page">
 
-  <!-- Hero -->
   <section class="hero">
     <div class="hero-content">
       <div class="hero-badge">⚡ Available 24 Hours, 7 Days a Week</div>
       <h1 class="hero-title">Home Services,<br>Booked in Minutes</h1>
       <p class="hero-sub">Electricians, plumbers, wall specialists and glass works — all in one place. Pick a time that suits you and we'll handle the rest.</p>
       <div class="hero-cta">
-        <button class="btn-hero-primary" onclick="openModal('signup')">Get Started — It's Free</button>
+        <button class="btn-hero-primary"   onclick="openModal('signup')">Get Started — It's Free</button>
         <button class="btn-hero-secondary" onclick="openModal('login')">Log In to Book</button>
       </div>
       <p class="hero-note">No credit card required &nbsp;·&nbsp; Instant booking reference</p>
@@ -127,70 +129,35 @@
     </div>
   </section>
 
-  <!-- Services -->
   <section class="land-section">
     <div class="land-container">
       <h2 class="section-title">Our Services</h2>
       <p class="section-sub">Professional tradespeople available around the clock.</p>
       <div class="land-services">
-        <div class="land-svc-card">
-          <span class="land-svc-emoji">⚡</span>
-          <h3>Electrician</h3>
-          <p>Wiring, panels, fault finding & repairs</p>
-        </div>
-        <div class="land-svc-card">
-          <span class="land-svc-emoji">🔧</span>
-          <h3>Plumber</h3>
-          <p>Leaks, pipe bursts & full installations</p>
-        </div>
-        <div class="land-svc-card">
-          <span class="land-svc-emoji">🧱</span>
-          <h3>Wall Specialists</h3>
-          <p>Plastering, drywall & surface finishes</p>
-        </div>
-        <div class="land-svc-card">
-          <span class="land-svc-emoji">🪟</span>
-          <h3>Glass Works</h3>
-          <p>Windows, doors, glazing & replacements</p>
-        </div>
+        <div class="land-svc-card"><span class="land-svc-emoji">⚡</span><h3>Electrician</h3><p>Wiring, panels, fault finding & repairs</p></div>
+        <div class="land-svc-card"><span class="land-svc-emoji">🔧</span><h3>Plumber</h3><p>Leaks, pipe bursts & full installations</p></div>
+        <div class="land-svc-card"><span class="land-svc-emoji">🧱</span><h3>Wall Specialists</h3><p>Plastering, drywall & surface finishes</p></div>
+        <div class="land-svc-card"><span class="land-svc-emoji">🪟</span><h3>Glass Works</h3><p>Windows, doors, glazing & replacements</p></div>
       </div>
     </div>
   </section>
 
-  <!-- How it works -->
   <section class="land-section land-section--dark">
     <div class="land-container">
       <h2 class="section-title" style="color:#fff">How It Works</h2>
       <p class="section-sub" style="color:#aaa">Four simple steps to get the help you need.</p>
       <div class="steps-row">
-        <div class="how-step">
-          <div class="how-num">1</div>
-          <h4>Choose a Service</h4>
-          <p>Pick from our range of trusted home services.</p>
-        </div>
+        <div class="how-step"><div class="how-num">1</div><h4>Choose a Service</h4><p>Pick from our range of trusted home services.</p></div>
         <div class="how-arrow">→</div>
-        <div class="how-step">
-          <div class="how-num">2</div>
-          <h4>Pick Date & Time</h4>
-          <p>Select any slot across the full 24-hour day.</p>
-        </div>
+        <div class="how-step"><div class="how-num">2</div><h4>Pick Date & Time</h4><p>Select any slot across the full 24-hour day.</p></div>
         <div class="how-arrow">→</div>
-        <div class="how-step">
-          <div class="how-num">3</div>
-          <h4>Enter Your Details</h4>
-          <p>Tell us where you are and any special notes.</p>
-        </div>
+        <div class="how-step"><div class="how-num">3</div><h4>Enter Your Details</h4><p>Tell us where you are and any special notes.</p></div>
         <div class="how-arrow">→</div>
-        <div class="how-step">
-          <div class="how-num">4</div>
-          <h4>Get Confirmed</h4>
-          <p>Receive an instant booking reference number.</p>
-        </div>
+        <div class="how-step"><div class="how-num">4</div><h4>Get Confirmed</h4><p>Receive an instant booking reference number.</p></div>
       </div>
     </div>
   </section>
 
-  <!-- CTA banner -->
   <section class="land-cta-banner">
     <div class="land-container" style="text-align:center">
       <h2>Ready to book?</h2>
@@ -199,7 +166,6 @@
     </div>
   </section>
 
-  <!-- Footer -->
   <footer class="site-footer">
     <div class="land-container footer-inner">
       <div class="footer-brand">
@@ -213,31 +179,20 @@
 </div><!-- /landing-page -->
 
 <!-- ══════════════════════════════════════════
-     BOOKING APP  (logged-in users only)
+     BOOKING APP  (logged-in users)
 ══════════════════════════════════════════ -->
 <div id="booking-app" style="display:none">
 
-  <!-- Progress indicator -->
-  <div class="progress-bar">
-    <div class="step-indicator active" id="ind-1">
-      <span class="step-dot">1</span>
-      <span class="step-label">Service</span>
-    </div>
-    <div class="step-indicator" id="ind-2">
-      <span class="step-dot">2</span>
-      <span class="step-label">Date & Time</span>
-    </div>
-    <div class="step-indicator" id="ind-3">
-      <span class="step-dot">3</span>
-      <span class="step-label">Details</span>
-    </div>
-    <div class="step-indicator" id="ind-4">
-      <span class="step-dot">4</span>
-      <span class="step-label">Confirm</span>
-    </div>
+  <!-- Progress bar (hidden on My Bookings view) -->
+  <div class="progress-bar" id="progress-bar">
+    <div class="step-indicator active" id="ind-1"><span class="step-dot">1</span><span class="step-label">Service</span></div>
+    <div class="step-indicator"        id="ind-2"><span class="step-dot">2</span><span class="step-label">Date & Time</span></div>
+    <div class="step-indicator"        id="ind-3"><span class="step-dot">3</span><span class="step-label">Details</span></div>
+    <div class="step-indicator"        id="ind-4"><span class="step-dot">4</span><span class="step-label">Confirm</span></div>
   </div>
 
-  <main>
+  <!-- ── Booking flow ── -->
+  <main id="booking-flow">
 
     <!-- Step 1 -->
     <div class="step-card active" id="step-1">
@@ -301,7 +256,7 @@
       </form>
       <div class="btn-actions">
         <button class="btn btn-secondary" onclick="goStep(2)">&larr; Back</button>
-        <button class="btn btn-primary"   onclick="submitBooking()">Confirm Booking &rarr;</button>
+        <button class="btn btn-primary" id="confirm-btn" onclick="submitBooking()">Confirm Booking &rarr;</button>
       </div>
     </div>
 
@@ -315,14 +270,45 @@
         <span class="ref-number" id="ref-number"></span>
       </div>
       <div class="confirm-details" id="confirm-details"></div>
-      <button class="btn btn-new" onclick="resetBooking()">&#43; New Booking</button>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.5rem">
+        <button class="btn btn-new" style="flex:1" onclick="resetBooking()">&#43; New Booking</button>
+        <button class="btn btn-new" style="flex:1;background:#1a1a1a" onclick="showView('my-bookings')">View My Bookings</button>
+      </div>
     </div>
 
   </main>
+
+  <!-- ── My Bookings view ── -->
+  <div id="my-bookings-view" style="display:none">
+    <main>
+      <div class="step-card active">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem">
+          <div>
+            <p class="step-title">My Bookings</p>
+            <p class="step-sub" style="margin:0">All your past and upcoming bookings.</p>
+          </div>
+          <button class="btn btn-primary" onclick="showView('booking')">&#43; New Booking</button>
+        </div>
+        <div id="bookings-list"><div class="bookings-loading">Loading your bookings…</div></div>
+      </div>
+    </main>
+  </div>
+
 </div><!-- /booking-app -->
 
 <script>
-  /* ══ Data ══ */
+  /* ══════════════════════════════════════════
+     SUPABASE CONFIG
+     Replace the two values below with your
+     project URL and anon key from the
+     Supabase dashboard → Settings → API
+  ══════════════════════════════════════════ */
+  const SUPABASE_URL      = 'https://YOUR_PROJECT_ID.supabase.co';
+  const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  /* ══ App Data ══ */
   const SERVICES = [
     { id: 'electrician', emoji: '⚡', name: 'Electrician',      desc: 'Wiring, panels & repairs' },
     { id: 'plumber',     emoji: '🔧', name: 'Plumber',          desc: 'Leaks, pipes & installations' },
@@ -331,9 +317,9 @@
   ];
 
   const TIME_GROUPS = [
-    { label: '🌅 Morning (6 AM – 12 PM)',        slots: ['6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM'] },
-    { label: '☀️ Afternoon (12 PM – 6 PM)',       slots: ['12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'] },
-    { label: '🌙 Evening & Night (6 PM – 6 AM)',  slots: ['6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM','12:00 AM','1:00 AM','2:00 AM','3:00 AM','4:00 AM','5:00 AM'] },
+    { label: '🌅 Morning (6 AM – 12 PM)',       slots: ['6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM'] },
+    { label: '☀️ Afternoon (12 PM – 6 PM)',      slots: ['12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'] },
+    { label: '🌙 Evening & Night (6 PM – 6 AM)', slots: ['6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM','12:00 AM','1:00 AM','2:00 AM','3:00 AM','4:00 AM','5:00 AM'] },
   ];
 
   const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -341,107 +327,121 @@
 
   /* ══ Booking state ══ */
   const state = { step:1, service:null, date:null, time:null, calYear:0, calMonth:0 };
+  let currentUser = null;
 
   /* ══════════════════════════════════════════
-     AUTH
+     AUTH — Supabase
   ══════════════════════════════════════════ */
-  function getUser() {
-    try { return JSON.parse(localStorage.getItem('sevk_user')); } catch { return null; }
-  }
 
-  function setUser(u) { localStorage.setItem('sevk_user', JSON.stringify(u)); }
-  function clearUser()  { localStorage.removeItem('sevk_user'); }
+  /* Listen for sign-in / sign-out / token refresh */
+  sb.auth.onAuthStateChange((_event, session) => {
+    currentUser = session?.user ?? null;
+    applyAuthState();
+    if (currentUser) initBooking();
+  });
 
   function applyAuthState() {
-    const user = getUser();
-    document.getElementById('landing-page').style.display  = user ? 'none' : '';
-    document.getElementById('booking-app').style.display   = user ? ''     : 'none';
-    document.getElementById('guest-buttons').style.display = user ? 'none' : '';
-    document.getElementById('user-menu').style.display     = user ? ''     : 'none';
+    const loggedIn = !!currentUser;
 
-    if (user) {
-      const initials = (user.firstName[0] + (user.lastName ? user.lastName[0] : '')).toUpperCase();
+    document.getElementById('landing-page').style.display  = loggedIn ? 'none' : '';
+    document.getElementById('booking-app').style.display   = loggedIn ? ''     : 'none';
+    document.getElementById('guest-buttons').style.display = loggedIn ? 'none' : '';
+    document.getElementById('user-menu').style.display     = loggedIn ? ''     : 'none';
+
+    if (loggedIn) {
+      const meta      = currentUser.user_metadata || {};
+      const firstName = meta.first_name || currentUser.email.split('@')[0];
+      const lastName  = meta.last_name  || '';
+      const initials  = (firstName[0] + (lastName ? lastName[0] : '')).toUpperCase();
+
       document.getElementById('user-avatar').textContent = initials;
-      document.getElementById('user-name').textContent   = user.firstName;
+      document.getElementById('user-name').textContent   = firstName;
 
-      // Pre-fill step-3 form with account details
-      const nameEl = document.getElementById('inp-name');
+      const nameEl  = document.getElementById('inp-name');
       const emailEl = document.getElementById('inp-email');
-      if (nameEl && !nameEl.value) nameEl.value = user.firstName + (user.lastName ? ' ' + user.lastName : '');
-      if (emailEl && !emailEl.value) emailEl.value = user.email;
+      if (nameEl  && !nameEl.value)  nameEl.value  = (firstName + ' ' + lastName).trim();
+      if (emailEl && !emailEl.value) emailEl.value = currentUser.email;
     }
   }
 
-  function logout() {
-    clearUser();
+  async function logout() {
+    await sb.auth.signOut();
     resetBooking();
-    applyAuthState();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function goHome() {
-    const user = getUser();
-    if (!user) window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!currentUser) window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  /* ── Login ── */
-  function doLogin() {
+  /* ── Log In ── */
+  async function doLogin() {
     let ok = true;
-
-    function chk(groupId, inputId, test) {
-      const fg  = document.getElementById(groupId);
-      const val = document.getElementById(inputId).value.trim();
-      const pass = test(val);
-      fg.classList.toggle('error', !pass);
-      if (!pass) ok = false;
+    function chk(gId, iId, test) {
+      const val = document.getElementById(iId).value.trim();
+      document.getElementById(gId).classList.toggle('error', !test(val));
+      if (!test(val)) ok = false;
     }
-
     chk('li-fg-email', 'li-email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
     chk('li-fg-pass',  'li-pass',  v => v.length >= 1);
     if (!ok) return;
 
-    const email = document.getElementById('li-email').value.trim();
-    const stored = getUser();
+    const btn = document.getElementById('li-btn');
+    btn.textContent = 'Logging in…';
+    btn.disabled = true;
+    document.getElementById('li-error').textContent = '';
 
-    // Accept if the email matches a previously signed-up account, or allow any login (demo)
-    const namePart = email.split('@')[0].replace(/[._]/g, ' ');
-    const firstName = stored && stored.email === email
-      ? stored.firstName
-      : namePart.charAt(0).toUpperCase() + namePart.slice(1);
-    const lastName = stored && stored.email === email ? stored.lastName : '';
+    const { error } = await sb.auth.signInWithPassword({
+      email:    document.getElementById('li-email').value.trim(),
+      password: document.getElementById('li-pass').value,
+    });
 
-    setUser({ firstName, lastName, email });
+    btn.textContent = 'Log In';
+    btn.disabled = false;
+
+    if (error) {
+      document.getElementById('li-error').textContent = error.message;
+      return;
+    }
     closeModal();
-    initBooking();
-    applyAuthState();
   }
 
-  /* ── Sign up ── */
-  function doSignup() {
+  /* ── Sign Up ── */
+  async function doSignup() {
     let ok = true;
-
-    function chk(groupId, inputId, test) {
-      const fg  = document.getElementById(groupId);
-      const val = document.getElementById(inputId).value.trim();
-      const pass = test(val);
-      fg.classList.toggle('error', !pass);
-      if (!pass) ok = false;
+    function chk(gId, iId, test) {
+      const val = document.getElementById(iId).value.trim();
+      document.getElementById(gId).classList.toggle('error', !test(val));
+      if (!test(val)) ok = false;
     }
-
     chk('su-fg-fname', 'su-fname', v => v.length >= 1);
     chk('su-fg-lname', 'su-lname', v => v.length >= 1);
     chk('su-fg-email', 'su-email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
     chk('su-fg-pass',  'su-pass',  v => v.length >= 8);
     if (!ok) return;
 
-    setUser({
-      firstName: document.getElementById('su-fname').value.trim(),
-      lastName:  document.getElementById('su-lname').value.trim(),
-      email:     document.getElementById('su-email').value.trim(),
+    const btn = document.getElementById('su-btn');
+    btn.textContent = 'Creating account…';
+    btn.disabled = true;
+    document.getElementById('su-error').textContent = '';
+
+    const { error } = await sb.auth.signUp({
+      email:    document.getElementById('su-email').value.trim(),
+      password: document.getElementById('su-pass').value,
+      options:  { data: {
+        first_name: document.getElementById('su-fname').value.trim(),
+        last_name:  document.getElementById('su-lname').value.trim(),
+      }},
     });
+
+    btn.textContent = 'Create Account';
+    btn.disabled = false;
+
+    if (error) {
+      document.getElementById('su-error').textContent = error.message;
+      return;
+    }
     closeModal();
-    initBooking();
-    applyAuthState();
   }
 
   /* ══════════════════════════════════════════
@@ -472,6 +472,18 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
   /* ══════════════════════════════════════════
+     VIEW SWITCHING
+  ══════════════════════════════════════════ */
+  function showView(view) {
+    const isMyBookings = view === 'my-bookings';
+    document.getElementById('progress-bar').style.display    = isMyBookings ? 'none' : '';
+    document.getElementById('booking-flow').style.display    = isMyBookings ? 'none' : '';
+    document.getElementById('my-bookings-view').style.display = isMyBookings ? ''    : 'none';
+    if (isMyBookings) loadMyBookings();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ══════════════════════════════════════════
      BOOKING APP
   ══════════════════════════════════════════ */
   function initBooking() {
@@ -483,15 +495,13 @@
     renderTimeSlots();
   }
 
-  /* ── Services ── */
   function renderServices() {
     document.getElementById('services-grid').innerHTML = SERVICES.map(s => `
       <div class="service-card" id="svc-${s.id}" onclick="selectService('${s.id}')">
         <span class="service-emoji">${s.emoji}</span>
         <div class="service-name">${s.name}</div>
         <div class="service-desc">${s.desc}</div>
-      </div>
-    `).join('');
+      </div>`).join('');
   }
 
   function selectService(id) {
@@ -500,7 +510,6 @@
     document.getElementById('svc-' + id).classList.add('selected');
   }
 
-  /* ── Calendar ── */
   function renderCalendar() {
     const { calYear, calMonth } = state;
     document.getElementById('month-label').textContent = MONTHS[calMonth] + ' ' + calYear;
@@ -511,11 +520,11 @@
     let html = DAYS.map(d => `<div class="cal-day-label">${d}</div>`).join('');
     for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
     for (let d = 1; d <= daysInMonth; d++) {
-      const date = new Date(calYear, calMonth, d);
+      const date       = new Date(calYear, calMonth, d);
       const isPast     = date < today;
       const isToday    = date.getTime() === today.getTime();
       const isSelected = state.date && state.date.getTime() === date.getTime();
-      let cls = 'cal-day' + (isPast ? ' past' : '') + (isToday ? ' today' : '') + (isSelected ? ' selected' : '');
+      const cls = 'cal-day' + (isPast ? ' past' : '') + (isToday ? ' today' : '') + (isSelected ? ' selected' : '');
       const click = isPast ? '' : `onclick="selectDate(${calYear},${calMonth},${d})"`;
       html += `<div class="${cls}" ${click}>${d}</div>`;
     }
@@ -529,26 +538,18 @@
     renderCalendar();
   }
 
-  function selectDate(y, m, d) {
-    state.date = new Date(y, m, d);
-    renderCalendar();
-  }
+  function selectDate(y, m, d) { state.date = new Date(y, m, d); renderCalendar(); }
 
-  /* ── Time slots ── */
   function renderTimeSlots() {
     document.getElementById('time-slots-container').innerHTML = TIME_GROUPS.map(g => `
       <div class="time-group-label">${g.label}</div>
       <div class="time-slots">
-        ${g.slots.map(s => `
-          <div class="time-slot${state.time === s ? ' selected' : ''}" onclick="selectTime('${s}')">${s}</div>
-        `).join('')}
-      </div>
-    `).join('');
+        ${g.slots.map(s => `<div class="time-slot${state.time === s ? ' selected' : ''}" onclick="selectTime('${s}')">${s}</div>`).join('')}
+      </div>`).join('');
   }
 
   function selectTime(slot) { state.time = slot; renderTimeSlots(); }
 
-  /* ── Summary ── */
   function renderSummary() {
     const svc     = SERVICES.find(s => s.id === state.service);
     const dateStr = state.date
@@ -557,11 +558,9 @@
     document.getElementById('summary-panel').innerHTML = `
       <div class="summary-row"><span>Service</span><span>${svc ? svc.emoji + ' ' + svc.name : '—'}</span></div>
       <div class="summary-row"><span>Date</span><span>${dateStr}</span></div>
-      <div class="summary-row"><span>Time</span><span>${state.time || '—'}</span></div>
-    `;
+      <div class="summary-row"><span>Time</span><span>${state.time || '—'}</span></div>`;
   }
 
-  /* ── Navigation ── */
   function goStep(n) {
     if (n === 2 && !state.service) { alert('Please select a service first.'); return; }
     if (n === 3) {
@@ -578,7 +577,7 @@
 
   function updateIndicators(current) {
     for (let i = 1; i <= 4; i++) {
-      const el  = document.getElementById('ind-' + i);
+      const el = document.getElementById('ind-' + i);
       el.classList.remove('active', 'done');
       if (i < current) el.classList.add('done');
       if (i === current) el.classList.add('active');
@@ -586,13 +585,11 @@
     }
   }
 
-  /* ── Form validation ── */
   function validateForm() {
     let valid = true;
-    function check(groupId, inputId, test) {
-      const fg  = document.getElementById(groupId);
-      const val = document.getElementById(inputId).value.trim();
-      fg.classList.toggle('error', !test(val));
+    function check(gId, iId, test) {
+      const val = document.getElementById(iId).value.trim();
+      document.getElementById(gId).classList.toggle('error', !test(val));
       if (!test(val)) valid = false;
     }
     check('fg-name',    'inp-name',    v => v.length >= 2);
@@ -602,20 +599,44 @@
     return valid;
   }
 
-  /* ── Submit ── */
-  function submitBooking() {
+  /* ── Submit booking → saved to Supabase ── */
+  async function submitBooking() {
     if (!validateForm()) return;
-    const svc     = SERVICES.find(s => s.id === state.service);
-    const chars   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    const svc   = SERVICES.find(s => s.id === state.service);
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let ref = 'SVK-';
     for (let i = 0; i < 6; i++) ref += chars[Math.floor(Math.random() * chars.length)];
 
-    const dateStr = state.date.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
     const name    = document.getElementById('inp-name').value.trim();
     const phone   = document.getElementById('inp-phone').value.trim();
     const email   = document.getElementById('inp-email').value.trim();
     const address = document.getElementById('inp-address').value.trim();
     const notes   = document.getElementById('inp-notes').value.trim();
+    const dateStr = state.date.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+    const btn = document.getElementById('confirm-btn');
+    btn.textContent = 'Saving…';
+    btn.disabled = true;
+
+    const { error } = await sb.from('bookings').insert({
+      user_id:       currentUser.id,
+      ref_number:    ref,
+      service_id:    svc.id,
+      service_name:  svc.name,
+      service_emoji: svc.emoji,
+      date:          state.date.toISOString().split('T')[0],
+      time:          state.time,
+      name, phone, email, address, notes,
+    });
+
+    btn.textContent = 'Confirm Booking →';
+    btn.disabled = false;
+
+    if (error) {
+      alert('Could not save booking: ' + error.message);
+      return;
+    }
 
     document.getElementById('ref-number').textContent = ref;
     document.getElementById('confirm-details').innerHTML = `
@@ -626,9 +647,58 @@
       <div class="confirm-row"><span class="ci">📞</span><span class="cl">Phone</span><span class="cv">${phone}</span></div>
       <div class="confirm-row"><span class="ci">✉️</span><span class="cl">Email</span><span class="cv">${email}</span></div>
       <div class="confirm-row"><span class="ci">📍</span><span class="cl">Address</span><span class="cv">${address}</span></div>
-      ${notes ? `<div class="confirm-row"><span class="ci">📝</span><span class="cl">Notes</span><span class="cv">${notes}</span></div>` : ''}
-    `;
+      ${notes ? `<div class="confirm-row"><span class="ci">📝</span><span class="cl">Notes</span><span class="cv">${notes}</span></div>` : ''}`;
+
     goStep(4);
+  }
+
+  /* ── My Bookings ── */
+  async function loadMyBookings() {
+    const list = document.getElementById('bookings-list');
+    list.innerHTML = '<div class="bookings-loading">Loading your bookings…</div>';
+
+    const { data, error } = await sb
+      .from('bookings')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      list.innerHTML = `<div class="bookings-empty">Could not load bookings: ${error.message}</div>`;
+      return;
+    }
+
+    if (!data.length) {
+      list.innerHTML = `
+        <div class="bookings-empty">
+          <div style="font-size:2.5rem;margin-bottom:0.75rem">📋</div>
+          <p>No bookings yet.</p>
+          <button class="btn btn-primary" style="margin-top:1rem" onclick="showView('booking')">Make Your First Booking</button>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = data.map(b => {
+      const d = new Date(b.date + 'T00:00:00');
+      const dateStr = d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+      const createdStr = new Date(b.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+      return `
+        <div class="booking-card">
+          <div class="booking-card-header">
+            <span class="booking-emoji">${b.service_emoji}</span>
+            <div class="booking-card-title">
+              <strong>${b.service_name}</strong>
+              <span class="booking-ref">${b.ref_number}</span>
+            </div>
+            <span class="booking-status confirmed">Confirmed</span>
+          </div>
+          <div class="booking-card-body">
+            <div class="bc-row"><span>📅</span><span>${dateStr} at ${b.time}</span></div>
+            <div class="bc-row"><span>📍</span><span>${b.address}</span></div>
+            ${b.notes ? `<div class="bc-row"><span>📝</span><span>${b.notes}</span></div>` : ''}
+          </div>
+          <div class="booking-card-footer">Booked on ${createdStr}</div>
+        </div>`;
+    }).join('');
   }
 
   /* ── Reset ── */
@@ -636,14 +706,11 @@
     state.service = null; state.date = null; state.time = null;
     const form = document.getElementById('details-form');
     if (form) form.reset();
-    document.querySelectorAll('.form-group').forEach(fg => fg.classList.remove('error'));
-    initBooking();
+    document.querySelectorAll('.step-card .form-group').forEach(fg => fg.classList.remove('error'));
+    showView('booking');
+    if (currentUser) initBooking();
     goStep(1);
   }
-
-  /* ══ Boot ══ */
-  applyAuthState();
-  if (getUser()) initBooking();
 </script>
 
 </body>

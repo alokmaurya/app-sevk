@@ -937,6 +937,106 @@ main {
 
 .footer-copy { font-size: 0.78rem; }
 
+/* ── My Bookings button ── */
+.btn-my-bookings {
+  background: transparent;
+  color: #ccc;
+  border: 2px solid #333;
+  padding: 0.35rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+
+.btn-my-bookings:hover { color: var(--white); border-color: #666; }
+
+/* ── Booking cards ── */
+.bookings-loading,
+.bookings-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--grey-text);
+  font-size: 0.95rem;
+}
+
+.booking-card {
+  border: 2px solid var(--grey-mid);
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.booking-card:hover {
+  border-color: #bbb;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+}
+
+.booking-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--grey-light);
+  border-bottom: 1px solid var(--grey-mid);
+}
+
+.booking-emoji { font-size: 1.5rem; flex-shrink: 0; }
+
+.booking-card-title {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.booking-card-title strong { font-size: 0.95rem; }
+
+.booking-ref {
+  font-size: 0.75rem;
+  color: var(--grey-text);
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.booking-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.booking-status.confirmed { background: #e8f5e9; color: #2e7d32; }
+.booking-status.pending   { background: #fff8e1; color: #f57f17; }
+
+.booking-card-body {
+  padding: 0.8rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.bc-row {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--black);
+}
+
+.bc-row span:first-child { flex-shrink: 0; }
+
+.booking-card-footer {
+  padding: 0.5rem 1.1rem;
+  font-size: 0.75rem;
+  color: var(--grey-text);
+  border-top: 1px solid var(--grey-mid);
+  background: #fafafa;
+}
+
 /* ── Responsive ── */
 @media (max-width: 700px) {
   .hero { padding: 3rem 1.2rem 2.5rem; }
