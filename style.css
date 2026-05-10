@@ -67,6 +67,141 @@ header {
   letter-spacing: 1px;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-login {
+  background: transparent;
+  color: var(--white);
+  border: 2px solid #444;
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-login:hover { border-color: var(--white); }
+
+.btn-signup {
+  background: var(--red);
+  color: var(--white);
+  border: 2px solid var(--red);
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-signup:hover { background: var(--red-dark); border-color: var(--red-dark); }
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--grey-text);
+  line-height: 1;
+}
+
+.modal-close:hover { color: var(--black); }
+
+.modal-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--grey-mid);
+}
+
+.modal-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 0.6rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--grey-text);
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.modal-tab.active {
+  color: var(--red);
+  border-bottom-color: var(--red);
+}
+
+.modal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.modal-sub {
+  font-size: 0.83rem;
+  color: var(--grey-text);
+  margin-bottom: 1.2rem;
+}
+
+.modal-submit {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.modal-switch {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--grey-text);
+  margin-top: 1rem;
+}
+
+.modal-switch a {
+  color: var(--red);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.modal-switch a:hover { text-decoration: underline; }
+
 /* ── Progress bar ── */
 .progress-bar {
   background: var(--black);
