@@ -13,8 +13,69 @@
     <div class="logo-icon">S</div>
     <span class="logo-name">SEVK</span>
   </div>
-  <span class="header-tag">24×7 HOME SERVICES</span>
+  <div class="header-right">
+    <span class="header-tag">24×7 HOME SERVICES</span>
+    <div class="auth-buttons">
+      <button class="btn-login" onclick="openModal('login')">Log In</button>
+      <button class="btn-signup" onclick="openModal('signup')">Sign Up</button>
+    </div>
+  </div>
 </header>
+
+<!-- Auth Modal -->
+<div class="modal-overlay" id="auth-modal" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+
+    <!-- Tabs -->
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tab-login" onclick="switchTab('login')">Log In</button>
+      <button class="modal-tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="modal-login">
+      <h2 class="modal-title">Welcome back</h2>
+      <p class="modal-sub">Log in to manage your bookings.</p>
+      <div class="form-group">
+        <label for="li-email">Email Address</label>
+        <input type="email" id="li-email" placeholder="john@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="li-pass">Password</label>
+        <input type="password" id="li-pass" placeholder="••••••••" />
+      </div>
+      <button class="btn btn-primary modal-submit">Log In</button>
+      <p class="modal-switch">Don't have an account? <a href="#" onclick="switchTab('signup')">Sign Up</a></p>
+    </div>
+
+    <!-- Signup Form -->
+    <div id="modal-signup" style="display:none">
+      <h2 class="modal-title">Create an account</h2>
+      <p class="modal-sub">Sign up to track and manage your bookings.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="su-fname">First Name</label>
+          <input type="text" id="su-fname" placeholder="John" />
+        </div>
+        <div class="form-group">
+          <label for="su-lname">Last Name</label>
+          <input type="text" id="su-lname" placeholder="Smith" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="su-email">Email Address</label>
+        <input type="email" id="su-email" placeholder="john@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="su-pass">Password</label>
+        <input type="password" id="su-pass" placeholder="Min. 8 characters" />
+      </div>
+      <button class="btn btn-primary modal-submit">Create Account</button>
+      <p class="modal-switch">Already have an account? <a href="#" onclick="switchTab('login')">Log In</a></p>
+    </div>
+  </div>
+</div>
 
 <!-- Progress indicator -->
 <div class="progress-bar">
@@ -358,6 +419,31 @@
 
     goStep(4);
   }
+
+  /* ── Auth modal ── */
+  function openModal(tab) {
+    switchTab(tab);
+    document.getElementById('auth-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('auth-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeModalOnOverlay(e) {
+    if (e.target === document.getElementById('auth-modal')) closeModal();
+  }
+
+  function switchTab(tab) {
+    document.getElementById('modal-login').style.display  = tab === 'login'  ? '' : 'none';
+    document.getElementById('modal-signup').style.display = tab === 'signup' ? '' : 'none';
+    document.getElementById('tab-login').classList.toggle('active',  tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
   /* ── Reset ── */
   function resetBooking() {
