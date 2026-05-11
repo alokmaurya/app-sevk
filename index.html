@@ -287,23 +287,62 @@
 
   </main>
 
-  <!-- ── My Bookings view ── -->
-  <div id="my-bookings-view" style="display:none">
-    <main>
-      <div class="step-card active">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem">
-          <div>
-            <p class="step-title">My Bookings</p>
-            <p class="step-sub" style="margin:0">All your past and upcoming bookings.</p>
-          </div>
-          <button class="btn btn-primary" onclick="showView('booking')">&#43; New Booking</button>
-        </div>
-        <div id="bookings-list"><div class="bookings-loading">Loading your bookings…</div></div>
-      </div>
-    </main>
-  </div>
-
 </div><!-- /booking-app -->
+
+<!-- ══════════════════════════════════════════
+     MY BOOKINGS PAGE  (logged-in users)
+══════════════════════════════════════════ -->
+<div id="my-bookings-page" style="display:none">
+  <div class="mbp-container">
+
+    <!-- Page header -->
+    <div class="mbp-header">
+      <div>
+        <h1 class="mbp-title">My Bookings</h1>
+        <p class="mbp-sub">Welcome back, <span id="mbp-username"></span></p>
+      </div>
+      <button class="btn btn-primary" onclick="showView('booking')">&#43; New Booking</button>
+    </div>
+
+    <!-- Stats row -->
+    <div class="mbp-stats" id="mbp-stats">
+      <div class="stat-card">
+        <div class="stat-icon">📋</div>
+        <div class="stat-num" id="stat-total">—</div>
+        <div class="stat-label">Total Bookings</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="color:#3b82f6">📅</div>
+        <div class="stat-num" id="stat-scheduled">—</div>
+        <div class="stat-label">Scheduled</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="color:#f59e0b">⚙️</div>
+        <div class="stat-num" id="stat-inprogress">—</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="color:#10b981">✅</div>
+        <div class="stat-num" id="stat-completed">—</div>
+        <div class="stat-label">Completed</div>
+      </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="mbp-filters">
+      <button class="filter-tab active" id="ft-all"         onclick="filterBookings('all')">All</button>
+      <button class="filter-tab"        id="ft-Scheduled"   onclick="filterBookings('Scheduled')">Scheduled</button>
+      <button class="filter-tab"        id="ft-In Progress" onclick="filterBookings('In Progress')">In Progress</button>
+      <button class="filter-tab"        id="ft-Completed"   onclick="filterBookings('Completed')">Completed</button>
+    </div>
+
+    <!-- Bookings list -->
+    <div id="mbp-list">
+      <div class="bookings-loading">Loading your bookings…</div>
+    </div>
+
+  </div>
+</div><!-- /my-bookings-page -->
 
 <script>
   /* ══════════════════════════════════════════
@@ -339,7 +378,9 @@
 
   /* ══ Booking state ══ */
   const state = { step:1, service:null, date:null, time:null, calYear:0, calMonth:0 };
-  let currentUser = null;
+  let currentUser  = null;
+  let allBookings  = [];   // cached for client-side filtering
+  let activeFilter = 'all';
 
   /* ══════════════════════════════════════════
      AUTH — Supabase
@@ -355,10 +396,11 @@
   function applyAuthState() {
     const loggedIn = !!currentUser;
 
-    document.getElementById('landing-page').style.display  = loggedIn ? 'none' : '';
-    document.getElementById('booking-app').style.display   = loggedIn ? ''     : 'none';
-    document.getElementById('guest-buttons').style.display = loggedIn ? 'none' : '';
-    document.getElementById('user-menu').style.display     = loggedIn ? ''     : 'none';
+    document.getElementById('guest-buttons').style.display   = loggedIn ? 'none' : '';
+    document.getElementById('user-menu').style.display       = loggedIn ? ''     : 'none';
+    document.getElementById('landing-page').style.display    = loggedIn ? 'none' : '';
+    document.getElementById('booking-app').style.display     = loggedIn ? ''     : 'none';
+    document.getElementById('my-bookings-page').style.display = 'none'; // always reset on auth change
 
     if (loggedIn) {
       const meta      = currentUser.user_metadata || {};
@@ -366,8 +408,9 @@
       const lastName  = meta.last_name  || '';
       const initials  = (firstName[0] + (lastName ? lastName[0] : '')).toUpperCase();
 
-      document.getElementById('user-avatar').textContent = initials;
-      document.getElementById('user-name').textContent   = firstName;
+      document.getElementById('user-avatar').textContent  = initials;
+      document.getElementById('user-name').textContent    = firstName;
+      document.getElementById('mbp-username').textContent = firstName;
 
       const nameEl  = document.getElementById('inp-name');
       const emailEl = document.getElementById('inp-email');
@@ -513,11 +556,9 @@
      VIEW SWITCHING
   ══════════════════════════════════════════ */
   function showView(view) {
-    const isMyBookings = view === 'my-bookings';
-    document.getElementById('progress-bar').style.display    = isMyBookings ? 'none' : '';
-    document.getElementById('booking-flow').style.display    = isMyBookings ? 'none' : '';
-    document.getElementById('my-bookings-view').style.display = isMyBookings ? ''    : 'none';
-    if (isMyBookings) loadMyBookings();
+    document.getElementById('booking-app').style.display      = view === 'booking'     ? '' : 'none';
+    document.getElementById('my-bookings-page').style.display = view === 'my-bookings' ? '' : 'none';
+    if (view === 'my-bookings') loadMyBookings();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -691,9 +732,15 @@
   }
 
   /* ── My Bookings ── */
+  const STATUS_META = {
+    'Scheduled':   { cls: 'status-scheduled',   label: 'Scheduled'   },
+    'In Progress': { cls: 'status-inprogress',  label: 'In Progress' },
+    'Completed':   { cls: 'status-completed',   label: 'Completed'   },
+  };
+
   async function loadMyBookings() {
-    const list = document.getElementById('bookings-list');
-    list.innerHTML = '<div class="bookings-loading">Loading your bookings…</div>';
+    document.getElementById('mbp-list').innerHTML =
+      '<div class="bookings-loading">Loading your bookings…</div>';
 
     const { data, error } = await sb
       .from('bookings')
@@ -701,40 +748,90 @@
       .order('created_at', { ascending: false });
 
     if (error) {
-      list.innerHTML = `<div class="bookings-empty">Could not load bookings: ${error.message}</div>`;
+      document.getElementById('mbp-list').innerHTML =
+        `<div class="bookings-empty">Could not load bookings: ${error.message}</div>`;
       return;
     }
 
-    if (!data.length) {
+    allBookings  = data;
+    activeFilter = 'all';
+    renderStats();
+    renderBookingCards('all');
+    setActiveFilterTab('all');
+  }
+
+  function renderStats() {
+    const scheduled  = allBookings.filter(b => b.status === 'Scheduled').length;
+    const inProgress = allBookings.filter(b => b.status === 'In Progress').length;
+    const completed  = allBookings.filter(b => b.status === 'Completed').length;
+
+    document.getElementById('stat-total').textContent      = allBookings.length;
+    document.getElementById('stat-scheduled').textContent  = scheduled;
+    document.getElementById('stat-inprogress').textContent = inProgress;
+    document.getElementById('stat-completed').textContent  = completed;
+  }
+
+  function filterBookings(filter) {
+    activeFilter = filter;
+    setActiveFilterTab(filter);
+    renderBookingCards(filter);
+  }
+
+  function setActiveFilterTab(filter) {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    const tabId = filter === 'all' ? 'ft-all' : 'ft-' + filter;
+    const tab = document.getElementById(tabId);
+    if (tab) tab.classList.add('active');
+  }
+
+  function renderBookingCards(filter) {
+    const list = document.getElementById('mbp-list');
+    const filtered = filter === 'all'
+      ? allBookings
+      : allBookings.filter(b => b.status === filter);
+
+    if (!filtered.length) {
+      const msg = allBookings.length === 0
+        ? 'You have no bookings yet.'
+        : `No bookings with status "${filter}".`;
       list.innerHTML = `
         <div class="bookings-empty">
-          <div style="font-size:2.5rem;margin-bottom:0.75rem">📋</div>
-          <p>No bookings yet.</p>
-          <button class="btn btn-primary" style="margin-top:1rem" onclick="showView('booking')">Make Your First Booking</button>
+          <div class="bookings-empty-icon">📋</div>
+          <p>${msg}</p>
+          ${allBookings.length === 0
+            ? `<button class="btn btn-primary" style="margin-top:1.2rem" onclick="showView('booking')">Make Your First Booking</button>`
+            : ''}
         </div>`;
       return;
     }
 
-    list.innerHTML = data.map(b => {
-      const d = new Date(b.date + 'T00:00:00');
-      const dateStr = d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+    list.innerHTML = filtered.map(b => {
+      const d          = new Date(b.date + 'T00:00:00');
+      const dateStr    = d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
       const createdStr = new Date(b.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+      const status     = b.status || 'Scheduled';
+      const sm         = STATUS_META[status] || STATUS_META['Scheduled'];
+
       return `
-        <div class="booking-card">
-          <div class="booking-card-header">
-            <span class="booking-emoji">${b.service_emoji}</span>
-            <div class="booking-card-title">
-              <strong>${b.service_name}</strong>
-              <span class="booking-ref">${b.ref_number}</span>
+        <div class="bk-card">
+          <div class="bk-card-top">
+            <div class="bk-service">
+              <span class="bk-emoji">${b.service_emoji}</span>
+              <div>
+                <div class="bk-service-name">${b.service_name}</div>
+                <div class="bk-ref">${b.ref_number}</div>
+              </div>
             </div>
-            <span class="booking-status confirmed">Confirmed</span>
+            <span class="bk-status ${sm.cls}">${sm.label}</span>
           </div>
-          <div class="booking-card-body">
-            <div class="bc-row"><span>📅</span><span>${dateStr} at ${b.time}</span></div>
-            <div class="bc-row"><span>📍</span><span>${b.address}</span></div>
-            ${b.notes ? `<div class="bc-row"><span>📝</span><span>${b.notes}</span></div>` : ''}
+          <div class="bk-card-body">
+            <div class="bk-row"><span class="bk-row-icon">📅</span><span><strong>${dateStr}</strong> at <strong>${b.time}</strong></span></div>
+            <div class="bk-row"><span class="bk-row-icon">👤</span><span>${b.name}</span></div>
+            <div class="bk-row"><span class="bk-row-icon">📞</span><span>${b.phone}</span></div>
+            <div class="bk-row"><span class="bk-row-icon">📍</span><span>${b.address}</span></div>
+            ${b.notes ? `<div class="bk-row"><span class="bk-row-icon">📝</span><span>${b.notes}</span></div>` : ''}
           </div>
-          <div class="booking-card-footer">Booked on ${createdStr}</div>
+          <div class="bk-card-footer">Booked on ${createdStr}</div>
         </div>`;
     }).join('');
   }
