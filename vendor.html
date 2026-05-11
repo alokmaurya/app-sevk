@@ -295,13 +295,33 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   /* Reject a promise after ms milliseconds with a clear error */
-  function withTimeout(promise, ms = 12000) {
+  function withTimeout(promise, ms = 20000) {
     return Promise.race([
       promise,
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Request timed out. Please try again.')), ms)
+        setTimeout(() => reject(new Error(
+          'Request timed out — Supabase may be paused. ' +
+          'Go to supabase.com → your project → click Resume, then try again.'
+        )), ms)
       ),
     ]);
+  }
+
+  /* Quick connectivity check before auth calls */
+  async function checkConnectivity() {
+    try {
+      const res = await Promise.race([
+        fetch(`${SUPABASE_URL}/auth/v1/settings`, {
+          headers: { apikey: SUPABASE_ANON_KEY },
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 6000)
+        ),
+      ]);
+      return res.ok || res.status === 400; // 400 = auth service up, just bad request
+    } catch {
+      return false;
+    }
   }
 
   /* ══ State ══ */
@@ -396,8 +416,18 @@
     if (!ok) return;
 
     const btn = document.getElementById('li-btn');
-    btn.textContent = 'Logging in…'; btn.disabled = true;
+    btn.textContent = 'Connecting…'; btn.disabled = true;
     document.getElementById('li-error').textContent = '';
+
+    const online = await checkConnectivity();
+    if (!online) {
+      document.getElementById('li-error').textContent =
+        'Cannot reach Supabase. Your project may be paused — go to supabase.com, open your project and click Resume.';
+      btn.textContent = 'Log In'; btn.disabled = false;
+      return;
+    }
+
+    btn.textContent = 'Logging in…';
 
     try {
       const { error } = await withTimeout(sb.auth.signInWithPassword({
@@ -451,8 +481,18 @@
     const serviceEmoji = opt.dataset.emoji;
 
     const btn = document.getElementById('rg-btn');
-    btn.textContent = 'Creating account…'; btn.disabled = true;
+    btn.textContent = 'Connecting…'; btn.disabled = true;
     document.getElementById('rg-error').textContent = '';
+
+    const online = await checkConnectivity();
+    if (!online) {
+      document.getElementById('rg-error').textContent =
+        'Cannot reach Supabase. Your project may be paused — go to supabase.com, open your project and click Resume.';
+      btn.textContent = 'Create Vendor Account'; btn.disabled = false;
+      return;
+    }
+
+    btn.textContent = 'Creating account…';
 
     try {
       let userId;
