@@ -3,7 +3,22 @@
 -- Run this in: Supabase Dashboard → SQL Editor → New Query
 -- ══════════════════════════════════════════
 
--- 1. Bookings table
+-- 1. Vendors table (must be created BEFORE bookings — bookings FK references it)
+create table public.vendors (
+  id             uuid        default gen_random_uuid() primary key,
+  user_id        uuid        references auth.users(id) on delete cascade not null unique,
+  name           text        not null,
+  phone          text        not null,
+  email          text        not null,
+  service_id     text        not null,
+  service_name   text        not null,
+  service_emoji  text        not null,
+  status         text        default 'active'
+                             check (status in ('active', 'inactive')),
+  created_at     timestamptz default now()
+);
+
+-- 2. Bookings table
 create table public.bookings (
   id             uuid        default gen_random_uuid() primary key,
   user_id        uuid        references auth.users(id) on delete cascade not null,
@@ -24,24 +39,22 @@ create table public.bookings (
   created_at     timestamptz default now()
 );
 
--- 2. Vendors table
-create table public.vendors (
-  id             uuid        default gen_random_uuid() primary key,
-  user_id        uuid        references auth.users(id) on delete cascade not null unique,
-  name           text        not null,
-  phone          text        not null,
-  email          text        not null,
-  service_id     text        not null,
-  service_name   text        not null,
-  service_emoji  text        not null,
-  status         text        default 'active'
-                             check (status in ('active', 'inactive')),
-  created_at     timestamptz default now()
-);
-
 -- 3. Enable Row Level Security
-alter table public.bookings enable row level security;
 alter table public.vendors  enable row level security;
+alter table public.bookings enable row level security;
+
+-- ── Vendor profile policies ──
+create policy "Vendors can insert their own profile"
+  on public.vendors for insert
+  with check (auth.uid() = user_id);
+
+create policy "Vendors can view their own profile"
+  on public.vendors for select
+  using (auth.uid() = user_id);
+
+create policy "Vendors can update their own profile"
+  on public.vendors for update
+  using (auth.uid() = user_id);
 
 -- ── Booking policies (customers) ──
 create policy "Customers can insert their own bookings"
@@ -100,22 +113,12 @@ create policy "Vendors can update status on their jobs"
     )
   );
 
--- ── Vendor profile policies ──
-create policy "Vendors can insert their own profile"
-  on public.vendors for insert
-  with check (auth.uid() = user_id);
-
-create policy "Vendors can view their own profile"
-  on public.vendors for select
-  using (auth.uid() = user_id);
-
-create policy "Vendors can update their own profile"
-  on public.vendors for update
-  using (auth.uid() = user_id);
-
 -- ══════════════════════════════════════════
 -- IF YOUR TABLES ALREADY EXIST — run only what's missing:
 -- ══════════════════════════════════════════
+
+-- Create vendors table if missing:
+-- (copy the CREATE TABLE vendors block above)
 
 -- Add vendor_id to existing bookings table:
 -- alter table public.bookings
