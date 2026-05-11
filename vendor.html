@@ -294,6 +294,16 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBraHBrbXBzY3pucWtnYXN4d2RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDgzODAsImV4cCI6MjA5Mzk4NDM4MH0.y6hpeO_joE9AcdmfYEofsDSwqvGsCVRPbSUo3VtsbgY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  /* Reject a promise after ms milliseconds with a clear error */
+  function withTimeout(promise, ms = 12000) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out. Please try again.')), ms)
+      ),
+    ]);
+  }
+
   /* ══ State ══ */
   let currentUser   = null;
   let vendorProfile = null;
@@ -390,10 +400,10 @@
     document.getElementById('li-error').textContent = '';
 
     try {
-      const { error } = await sb.auth.signInWithPassword({
+      const { error } = await withTimeout(sb.auth.signInWithPassword({
         email:    document.getElementById('li-email').value.trim(),
         password: document.getElementById('li-pass').value,
-      });
+      }));
 
       if (error) {
         document.getElementById('li-error').textContent =
@@ -405,7 +415,7 @@
       closeModal();
     } catch (e) {
       document.getElementById('li-error').textContent =
-        'Connection error. Check your internet and try again.';
+        e.message || 'Connection error. Check your internet and try again.';
     } finally {
       btn.textContent = 'Log In'; btn.disabled = false;
     }
@@ -453,11 +463,11 @@
       } else {
         /* New registration — create auth account first */
         const email = document.getElementById('rg-email').value.trim();
-        const { data: authData, error: authError } = await sb.auth.signUp({
+        const { data: authData, error: authError } = await withTimeout(sb.auth.signUp({
           email,
           password: document.getElementById('rg-pass').value,
           options:  { data: { first_name: firstName, last_name: lastName } },
-        });
+        }));
 
         if (authError) {
           document.getElementById('rg-error').textContent = authError.message;
@@ -480,9 +490,8 @@
         ? currentUser.email
         : document.getElementById('rg-email').value.trim();
 
-      const { data: vendor, error: vendorError } = await sb
-        .from('vendors')
-        .insert({
+      const { data: vendor, error: vendorError } = await withTimeout(
+        sb.from('vendors').insert({
           user_id:       userId,
           name:          fullName,
           phone,
@@ -490,9 +499,8 @@
           service_id:    serviceId,
           service_name:  serviceName,
           service_emoji: serviceEmoji,
-        })
-        .select()
-        .single();
+        }).select().single()
+      );
 
       if (vendorError) {
         document.getElementById('rg-error').textContent = vendorError.message;
@@ -506,7 +514,7 @@
 
     } catch (e) {
       document.getElementById('rg-error').textContent =
-        'Connection error. Check your internet and try again.';
+        e.message || 'Connection error. Check your internet and try again.';
     } finally {
       btn.textContent = 'Create Vendor Account'; btn.disabled = false;
     }
