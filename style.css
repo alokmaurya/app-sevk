@@ -671,6 +671,20 @@ main {
   margin-bottom: 0.25rem;
 }
 
+/* ── Modal success state (email confirmation sent) ── */
+.modal-success {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.modal-success-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.modal-success .modal-title { margin-bottom: 0.5rem; }
+.modal-success .modal-sub   { margin-bottom: 1.5rem; line-height: 1.6; }
+
 /* ══════════════════════════════════════════
    LANDING PAGE
 ══════════════════════════════════════════ */

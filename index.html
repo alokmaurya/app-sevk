@@ -65,38 +65,47 @@
       </div>
       <div class="modal-error" id="li-error"></div>
       <button class="btn btn-primary modal-submit" id="li-btn" onclick="doLogin()">Log In</button>
-      <p class="modal-switch">Don't have an account? <a href="#" onclick="switchTab('signup')">Sign Up</a></p>
+      <p class="modal-switch">Don't have an account? <a href="javascript:void(0)" onclick="switchTab('signup')">Sign Up</a></p>
     </div>
 
     <!-- Sign Up -->
     <div id="modal-signup" style="display:none">
-      <h2 class="modal-title">Create an account</h2>
-      <p class="modal-sub">Sign up to track and manage your bookings.</p>
-      <div class="form-row">
-        <div class="form-group" id="su-fg-fname">
-          <label for="su-fname">First Name</label>
-          <input type="text" id="su-fname" placeholder="John" />
-          <span class="field-error">Required.</span>
+      <div id="su-form-body">
+        <h2 class="modal-title">Create an account</h2>
+        <p class="modal-sub">Sign up to track and manage your bookings.</p>
+        <div class="form-row">
+          <div class="form-group" id="su-fg-fname">
+            <label for="su-fname">First Name</label>
+            <input type="text" id="su-fname" placeholder="John" />
+            <span class="field-error">Required.</span>
+          </div>
+          <div class="form-group" id="su-fg-lname">
+            <label for="su-lname">Last Name</label>
+            <input type="text" id="su-lname" placeholder="Smith" />
+            <span class="field-error">Required.</span>
+          </div>
         </div>
-        <div class="form-group" id="su-fg-lname">
-          <label for="su-lname">Last Name</label>
-          <input type="text" id="su-lname" placeholder="Smith" />
-          <span class="field-error">Required.</span>
+        <div class="form-group" id="su-fg-email">
+          <label for="su-email">Email Address</label>
+          <input type="email" id="su-email" placeholder="john@example.com" />
+          <span class="field-error">Please enter a valid email.</span>
         </div>
+        <div class="form-group" id="su-fg-pass">
+          <label for="su-pass">Password</label>
+          <input type="password" id="su-pass" placeholder="Min. 8 characters" />
+          <span class="field-error">Password must be at least 8 characters.</span>
+        </div>
+        <div class="modal-error" id="su-error"></div>
+        <button class="btn btn-primary modal-submit" id="su-btn" onclick="doSignup()">Create Account</button>
+        <p class="modal-switch">Already have an account? <a href="javascript:void(0)" onclick="switchTab('login')">Log In</a></p>
       </div>
-      <div class="form-group" id="su-fg-email">
-        <label for="su-email">Email Address</label>
-        <input type="email" id="su-email" placeholder="john@example.com" />
-        <span class="field-error">Please enter a valid email.</span>
+      <!-- Shown after signup when email confirmation is required -->
+      <div id="su-success" style="display:none" class="modal-success">
+        <div class="modal-success-icon">📧</div>
+        <h2 class="modal-title">Check your email!</h2>
+        <p class="modal-sub">A confirmation link has been sent to <strong id="su-success-email"></strong>.<br>Click the link to activate your account then log in.</p>
+        <button class="btn btn-primary modal-submit" onclick="switchTab('login'); document.getElementById('su-success').style.display='none'; document.getElementById('su-form-body').style.display=''">Go to Log In</button>
       </div>
-      <div class="form-group" id="su-fg-pass">
-        <label for="su-pass">Password</label>
-        <input type="password" id="su-pass" placeholder="Min. 8 characters" />
-        <span class="field-error">Password must be at least 8 characters.</span>
-      </div>
-      <div class="modal-error" id="su-error"></div>
-      <button class="btn btn-primary modal-submit" id="su-btn" onclick="doSignup()">Create Account</button>
-      <p class="modal-switch">Already have an account? <a href="#" onclick="switchTab('login')">Log In</a></p>
     </div>
   </div>
 </div>
@@ -369,7 +378,7 @@
 
   async function logout() {
     await sb.auth.signOut();
-    resetBooking();
+    // onAuthStateChange fires and calls applyAuthState() which hides booking-app
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -403,9 +412,13 @@
     btn.disabled = false;
 
     if (error) {
-      document.getElementById('li-error').textContent = error.message;
+      document.getElementById('li-error').textContent =
+        error.message === 'Invalid login credentials'
+          ? 'Incorrect email or password. Please try again.'
+          : error.message;
       return;
     }
+    // onAuthStateChange fires → applyAuthState() handles UI transition
     closeModal();
   }
 
@@ -428,8 +441,10 @@
     btn.disabled = true;
     document.getElementById('su-error').textContent = '';
 
-    const { error } = await sb.auth.signUp({
-      email:    document.getElementById('su-email').value.trim(),
+    const email = document.getElementById('su-email').value.trim();
+
+    const { data, error } = await sb.auth.signUp({
+      email,
       password: document.getElementById('su-pass').value,
       options:  { data: {
         first_name: document.getElementById('su-fname').value.trim(),
@@ -444,7 +459,16 @@
       document.getElementById('su-error').textContent = error.message;
       return;
     }
-    closeModal();
+
+    if (data.session) {
+      // Email confirmation is OFF — user is instantly logged in
+      closeModal();
+    } else {
+      // Email confirmation is ON — show "check your email" message
+      document.getElementById('su-form-body').style.display = 'none';
+      document.getElementById('su-success-email').textContent = email;
+      document.getElementById('su-success').style.display = '';
+    }
   }
 
   /* ══════════════════════════════════════════
@@ -470,9 +494,20 @@
     document.getElementById('modal-signup').style.display = tab === 'signup' ? '' : 'none';
     document.getElementById('tab-login').classList.toggle('active',  tab === 'login');
     document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    // Clear errors when switching tabs
+    document.getElementById('li-error').textContent = '';
+    document.getElementById('su-error').textContent = '';
+    document.querySelectorAll('#auth-modal .form-group').forEach(fg => fg.classList.remove('error'));
   }
 
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeModal(); return; }
+    if (e.key === 'Enter' && document.getElementById('auth-modal').classList.contains('open')) {
+      const loginVisible = document.getElementById('modal-login').style.display !== 'none';
+      if (loginVisible) doLogin();
+      else doSignup();
+    }
+  });
 
   /* ══════════════════════════════════════════
      VIEW SWITCHING
