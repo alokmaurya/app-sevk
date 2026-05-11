@@ -383,21 +383,26 @@
     btn.textContent = 'Logging in…'; btn.disabled = true;
     document.getElementById('li-error').textContent = '';
 
-    const { error } = await sb.auth.signInWithPassword({
-      email:    document.getElementById('li-email').value.trim(),
-      password: document.getElementById('li-pass').value,
-    });
+    try {
+      const { error } = await sb.auth.signInWithPassword({
+        email:    document.getElementById('li-email').value.trim(),
+        password: document.getElementById('li-pass').value,
+      });
 
-    btn.textContent = 'Log In'; btn.disabled = false;
-
-    if (error) {
+      if (error) {
+        document.getElementById('li-error').textContent =
+          error.message === 'Invalid login credentials'
+            ? 'Incorrect email or password.'
+            : error.message;
+        return;
+      }
+      closeModal();
+    } catch (e) {
       document.getElementById('li-error').textContent =
-        error.message === 'Invalid login credentials'
-          ? 'Incorrect email or password.'
-          : error.message;
-      return;
+        'Connection error. Check your internet and try again.';
+    } finally {
+      btn.textContent = 'Log In'; btn.disabled = false;
     }
-    closeModal();
   }
 
   /* ── Register ── */
@@ -431,44 +436,47 @@
     btn.textContent = 'Creating account…'; btn.disabled = true;
     document.getElementById('rg-error').textContent = '';
 
-    /* 1 — Create auth account */
-    const { data: authData, error: authError } = await sb.auth.signUp({
-      email,
-      password: document.getElementById('rg-pass').value,
-      options:  { data: { first_name: firstName, last_name: lastName } },
-    });
-
-    if (authError) {
-      btn.textContent = 'Create Vendor Account'; btn.disabled = false;
-      document.getElementById('rg-error').textContent = authError.message;
-      return;
-    }
-
-    /* 2 — Create vendor profile (only if session exists, i.e. email confirm OFF) */
-    if (authData.session) {
-      const { error: vendorError } = await sb.from('vendors').insert({
-        user_id:       authData.user.id,
-        name:          fullName,
-        phone,
+    try {
+      /* 1 — Create auth account */
+      const { data: authData, error: authError } = await sb.auth.signUp({
         email,
-        service_id:    serviceId,
-        service_name:  serviceName,
-        service_emoji: serviceEmoji,
+        password: document.getElementById('rg-pass').value,
+        options:  { data: { first_name: firstName, last_name: lastName } },
       });
 
-      btn.textContent = 'Create Vendor Account'; btn.disabled = false;
-
-      if (vendorError) {
-        document.getElementById('rg-error').textContent = vendorError.message;
+      if (authError) {
+        document.getElementById('rg-error').textContent = authError.message;
         return;
       }
-      closeModal();
-    } else {
-      /* Email confirmation required — show success panel */
+
+      /* 2 — Create vendor profile (only if session exists, i.e. email confirm OFF) */
+      if (authData.session) {
+        const { error: vendorError } = await sb.from('vendors').insert({
+          user_id:       authData.user.id,
+          name:          fullName,
+          phone,
+          email,
+          service_id:    serviceId,
+          service_name:  serviceName,
+          service_emoji: serviceEmoji,
+        });
+
+        if (vendorError) {
+          document.getElementById('rg-error').textContent = vendorError.message;
+          return;
+        }
+        closeModal();
+      } else {
+        /* Email confirmation required — show success panel */
+        document.getElementById('reg-form-body').style.display = 'none';
+        document.getElementById('reg-success-email').textContent = email;
+        document.getElementById('reg-success').style.display = '';
+      }
+    } catch (e) {
+      document.getElementById('rg-error').textContent =
+        'Connection error. Check your internet and try again.';
+    } finally {
       btn.textContent = 'Create Vendor Account'; btn.disabled = false;
-      document.getElementById('reg-form-body').style.display = 'none';
-      document.getElementById('reg-success-email').textContent = email;
-      document.getElementById('reg-success').style.display = '';
     }
   }
 
