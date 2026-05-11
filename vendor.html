@@ -265,7 +265,7 @@
 
     <!-- Tab bar -->
     <div class="vd-tabs">
-      <button class="vd-tab" id="vt-myjobs" onclick="switchDashTab('myjobs')">
+      <button class="vd-tab active" id="vt-myjobs" onclick="switchDashTab('myjobs')">
         My Jobs <span class="vd-tab-badge" id="badge-myjobs"></span>
       </button>
       <button class="vd-tab" id="vt-available" onclick="switchDashTab('available')">
@@ -298,13 +298,13 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   /* Reject a promise after ms milliseconds with a clear error */
-  function withTimeout(promise, ms = 20000) {
+  function withTimeout(promise, ms = 30000) {
     return Promise.race([
       promise,
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error(
-          'Request timed out — Supabase may be paused. ' +
-          'Go to supabase.com → your project → click Resume, then try again.'
+          'Request timed out. Check your internet connection and try again. ' +
+          'If the problem persists, wait a moment — Supabase may be slow to respond.'
         )), ms)
       ),
     ]);
@@ -321,18 +321,18 @@
           setTimeout(() => reject(new Error('timeout')), 6000)
         ),
       ]);
-      return res.ok || res.status === 400; // 400 = auth service up, just bad request
+      return res.ok || res.status === 400;
     } catch {
       return false;
     }
   }
 
   /* ══ State ══ */
-  let currentUser    = null;
-  let vendorProfile  = null;
-  let availableJobs  = [];
-  let myJobs         = [];
-  let refreshTimer   = null;
+  let currentUser   = null;
+  let vendorProfile = null;
+  let availableJobs = [];
+  let myJobs        = [];
+  let refreshTimer  = null;
 
   const STATUS_META = {
     'Scheduled':   { cls: 'status-scheduled',   label: 'Scheduled'   },
@@ -383,21 +383,18 @@
       startAutoRefresh();
     }
 
-    // Logged in via auth but no vendor profile — ask them to complete registration
     if (authOnly) {
       document.getElementById('v-guest-btns').style.display = 'none';
       document.getElementById('v-user-menu').style.display  = '';
       document.getElementById('v-username').textContent     = currentUser.email;
       document.getElementById('v-service-tag').textContent  = '';
       document.getElementById('v-avatar').textContent       = '?';
-      // Show register modal — hide email/pass fields since user is already authenticated
       document.getElementById('rg-fg-email').style.display = 'none';
       document.getElementById('rg-fg-pass').style.display  = 'none';
       openModal('register');
       document.getElementById('rg-error').textContent =
         'Account verified! Please complete your vendor profile to continue.';
     } else {
-      // Show email/pass fields for fresh registration
       document.getElementById('rg-fg-email').style.display = '';
       document.getElementById('rg-fg-pass').style.display  = '';
     }
@@ -410,9 +407,7 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  /* ══════════════════════════════════════════
-     TOAST & AUTO-REFRESH
-  ══════════════════════════════════════════ */
+  /* ── Toast & auto-refresh ── */
   function showToast(msg, type = 'success') {
     const t = document.getElementById('vd-toast');
     if (!t) return;
@@ -498,7 +493,6 @@
     chk('rg-fg-lname',   'rg-lname',   v => v.length >= 1);
     chk('rg-fg-phone',   'rg-phone',   v => /^[\d\s\+\-\(\)]{7,}$/.test(v));
     chk('rg-fg-service', 'rg-service', v => v.length > 0);
-    /* skip email/pass validation when already authenticated (completing profile) */
     if (!currentUser) {
       chk('rg-fg-email', 'rg-email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
       chk('rg-fg-pass',  'rg-pass',  v => v.length >= 8);
@@ -533,10 +527,8 @@
       let userId;
 
       if (currentUser) {
-        /* Already authenticated (email-confirm flow) — just create the vendor profile */
         userId = currentUser.id;
       } else {
-        /* New registration — create auth account first */
         const email = document.getElementById('rg-email').value.trim();
         const { data: authData, error: authError } = await withTimeout(sb.auth.signUp({
           email,
@@ -550,7 +542,6 @@
         }
 
         if (!authData.session) {
-          /* Email confirmation required — vendor profile created after they confirm */
           document.getElementById('reg-form-body').style.display = 'none';
           document.getElementById('reg-success-email').textContent = email;
           document.getElementById('reg-success').style.display = '';
@@ -560,7 +551,6 @@
         userId = authData.user.id;
       }
 
-      /* Insert vendor profile */
       const profileEmail = currentUser
         ? currentUser.email
         : document.getElementById('rg-email').value.trim();
@@ -582,7 +572,6 @@
         return;
       }
 
-      /* Set profile directly to avoid race with onAuthStateChange */
       vendorProfile = vendor;
       closeModal();
       applyAuthState();
@@ -597,7 +586,7 @@
 
   /* ══════════════════════════════════════════
      MODAL HELPERS
-  ══════════════════════════════════════════ -->*/
+  ══════════════════════════════════════════ */
   function openModal(tab) {
     switchTab(tab);
     document.getElementById('auth-modal').classList.add('open');
@@ -712,7 +701,7 @@
         <div class="vd-empty">
           <div class="vd-empty-icon">🎉</div>
           <p>No new jobs available right now.</p>
-          <p class="vd-empty-sub">The dashboard refreshes every 60 seconds. You can also click ↻ Refresh to check immediately.</p>
+          <p class="vd-empty-sub">Dashboard refreshes every 60 seconds. Click ↻ Refresh to check immediately.</p>
         </div>`;
       return;
     }
