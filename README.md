@@ -26,6 +26,15 @@ Live at: **https://alokmaurya.github.io/app-sevk/**
 - Rich booking cards with service, status badge, date/time, contact, address, notes
 - Status badges: 🔵 Scheduled · 🟡 In Progress · 🟢 Completed
 
+### Vendor Portal (`vendor.html`)
+- Separate portal for tradespeople to register and manage jobs
+- Vendor registration with trade/service selection (Electrician, Plumber, Wall Specialists, Glass Works)
+- Job board — vendors see all unassigned bookings for their trade
+- Accept job → Start job → Mark complete flow
+- Dashboard with stats: Available Jobs · My Scheduled · In Progress · Completed
+- Two-tab dashboard: Available Jobs / My Jobs
+- Vendors stored in a dedicated `vendors` table linked to Supabase Auth
+
 ### General
 - Red, Black & White brand theme
 - Fully responsive — works on mobile and desktop
@@ -60,9 +69,11 @@ Live at: **https://alokmaurya.github.io/app-sevk/**
 
 ```
 app-sevk/
-├── index.html           # Full app — markup, logic, routing
-├── style.css            # All styles (CSS variables, responsive)
-├── supabase-setup.sql   # Database schema + RLS policies
+├── index.html           # Customer app — landing, booking flow, my bookings
+├── style.css            # Customer app styles (CSS variables, responsive)
+├── vendor.html          # Vendor portal — registration, job dashboard, status updates
+├── vendor.css           # Vendor portal styles
+├── supabase-setup.sql   # Database schema + RLS policies (bookings + vendors)
 └── README.md            # Project documentation
 ```
 
@@ -114,7 +125,7 @@ https://alokmaurya.github.io/app-sevk/
 
 ## Database Schema
 
-The `supabase-setup.sql` file creates a `bookings` table with Row Level Security — users can only read and write their own bookings.
+The `supabase-setup.sql` file creates a `bookings` table and a `vendors` table with Row Level Security. Customers can only read/write their own bookings. Vendors can view and accept unassigned jobs matching their trade, and update status on their own jobs.
 
 | Column | Type | Description |
 |---|---|---|
@@ -135,6 +146,21 @@ The `supabase-setup.sql` file creates a `bookings` table with Row Level Security
 | `created_at` | timestamptz | Auto-set on insert |
 
 > **Note:** The `anon` key is safe to include in frontend code. RLS policies ensure each user can only access their own data. Never use the `service_role` key in the frontend.
+
+### Vendors Table
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | uuid | Primary key |
+| `user_id` | uuid | References `auth.users` (unique) |
+| `name` | text | Full name |
+| `phone` | text | Contact phone |
+| `email` | text | Contact email |
+| `service_id` | text | e.g. `electrician` |
+| `service_name` | text | e.g. `Electrician` |
+| `service_emoji` | text | e.g. `⚡` |
+| `status` | text | `active` · `inactive` |
+| `created_at` | timestamptz | Auto-set on insert |
 
 ---
 
@@ -158,6 +184,8 @@ The `supabase-setup.sql` file creates a `bookings` table with Row Level Security
 - [ ] SMS / email confirmation on booking (e.g. Twilio, Resend)
 - [ ] Password reset flow
 - [ ] Google / Apple sign-in via Supabase OAuth
+- [ ] Vendor rating / review system
+- [ ] Push notifications for new job assignments
 
 ---
 
