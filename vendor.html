@@ -133,7 +133,7 @@
   <!-- Hero -->
   <section class="v-hero">
     <div class="v-hero-content">
-      <div class="v-hero-badge">🔧 For Tradespeople & Specialists</div>
+      <div class="v-hero-badge">🔧 For Tradespeople &amp; Specialists</div>
       <h1 class="v-hero-title">Get More Jobs.<br>Work on Your Terms.</h1>
       <p class="v-hero-sub">Join the Sevk vendor network and receive bookings directly from local customers — 24 hours a day, 7 days a week.</p>
       <div class="v-hero-cta">
@@ -191,10 +191,10 @@
       <h2 class="v-section-title" style="color:#fff">We're Looking For</h2>
       <p class="v-section-sub" style="color:#aaa">Experienced tradespeople in these areas.</p>
       <div class="v-trades">
-        <div class="v-trade-card"><span>⚡</span><strong>Electricians</strong><p>Wiring, panels & repairs</p></div>
-        <div class="v-trade-card"><span>🔧</span><strong>Plumbers</strong><p>Leaks, pipes & installations</p></div>
-        <div class="v-trade-card"><span>🧱</span><strong>Wall Specialists</strong><p>Plastering, drywall & finishes</p></div>
-        <div class="v-trade-card"><span>🪟</span><strong>Glass Works</strong><p>Windows, doors & glazing</p></div>
+        <div class="v-trade-card"><span>⚡</span><strong>Electricians</strong><p>Wiring, panels &amp; repairs</p></div>
+        <div class="v-trade-card"><span>🔧</span><strong>Plumbers</strong><p>Leaks, pipes &amp; installations</p></div>
+        <div class="v-trade-card"><span>🧱</span><strong>Wall Specialists</strong><p>Plastering, drywall &amp; finishes</p></div>
+        <div class="v-trade-card"><span>🪟</span><strong>Glass Works</strong><p>Windows, doors &amp; glazing</p></div>
       </div>
     </div>
   </section>
@@ -236,27 +236,27 @@
         <h1 class="vd-title">Job Dashboard</h1>
         <p class="vd-sub">Welcome back, <span id="vd-name"></span> · <span id="vd-service"></span></p>
       </div>
-      <button class="btn-refresh" onclick="loadDashboard()" title="Refresh jobs">↻ Refresh</button>
+      <button class="btn-refresh" id="btn-refresh" onclick="manualRefresh()" title="Refresh jobs">↻ Refresh</button>
     </div>
 
     <!-- Stats -->
     <div class="vd-stats">
-      <div class="vd-stat-card">
+      <div class="vd-stat-card" onclick="switchDashTab('available')" style="cursor:pointer">
         <div class="vd-stat-icon">📋</div>
         <div class="vd-stat-num" id="vd-stat-available">—</div>
         <div class="vd-stat-label">Available Jobs</div>
       </div>
-      <div class="vd-stat-card">
+      <div class="vd-stat-card" onclick="switchDashTab('myjobs')" style="cursor:pointer">
         <div class="vd-stat-icon" style="color:#3b82f6">📅</div>
         <div class="vd-stat-num" id="vd-stat-scheduled">—</div>
         <div class="vd-stat-label">My Scheduled</div>
       </div>
-      <div class="vd-stat-card">
+      <div class="vd-stat-card" onclick="switchDashTab('myjobs')" style="cursor:pointer">
         <div class="vd-stat-icon" style="color:#f59e0b">⚙️</div>
         <div class="vd-stat-num" id="vd-stat-inprogress">—</div>
         <div class="vd-stat-label">In Progress</div>
       </div>
-      <div class="vd-stat-card">
+      <div class="vd-stat-card" onclick="switchDashTab('myjobs')" style="cursor:pointer">
         <div class="vd-stat-icon" style="color:#10b981">✅</div>
         <div class="vd-stat-num" id="vd-stat-completed">—</div>
         <div class="vd-stat-label">Completed</div>
@@ -265,25 +265,28 @@
 
     <!-- Tab bar -->
     <div class="vd-tabs">
-      <button class="vd-tab active" id="vt-available" onclick="switchDashTab('available')">
-        Available Jobs <span class="vd-tab-badge" id="badge-available"></span>
-      </button>
       <button class="vd-tab" id="vt-myjobs" onclick="switchDashTab('myjobs')">
         My Jobs <span class="vd-tab-badge" id="badge-myjobs"></span>
       </button>
+      <button class="vd-tab" id="vt-available" onclick="switchDashTab('available')">
+        Available Jobs <span class="vd-tab-badge" id="badge-available"></span>
+      </button>
+    </div>
+
+    <!-- My Jobs (default tab) -->
+    <div id="vd-myjobs">
+      <div id="myjobs-list"><div class="vd-loading"><span class="vd-spinner"></span> Loading your jobs…</div></div>
     </div>
 
     <!-- Available Jobs -->
-    <div id="vd-available">
-      <div id="available-list"><div class="vd-loading">Loading available jobs…</div></div>
-    </div>
-
-    <!-- My Jobs -->
-    <div id="vd-myjobs" style="display:none">
-      <div id="myjobs-list"><div class="vd-loading">Loading your jobs…</div></div>
+    <div id="vd-available" style="display:none">
+      <div id="available-list"><div class="vd-loading"><span class="vd-spinner"></span> Loading available jobs…</div></div>
     </div>
 
   </div>
+
+  <!-- Toast notification -->
+  <div id="vd-toast" class="vd-toast"></div>
 </div><!-- /vendor-dashboard -->
 
 <script>
@@ -325,10 +328,11 @@
   }
 
   /* ══ State ══ */
-  let currentUser   = null;
-  let vendorProfile = null;
-  let availableJobs = [];
-  let myJobs        = [];
+  let currentUser    = null;
+  let vendorProfile  = null;
+  let availableJobs  = [];
+  let myJobs         = [];
+  let refreshTimer   = null;
 
   const STATUS_META = {
     'Scheduled':   { cls: 'status-scheduled',   label: 'Scheduled'   },
@@ -369,12 +373,14 @@
 
     if (currentUser && vendorProfile) {
       const initials = vendorProfile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-      document.getElementById('v-avatar').textContent    = initials;
-      document.getElementById('v-username').textContent  = vendorProfile.name.split(' ')[0];
+      document.getElementById('v-avatar').textContent      = initials;
+      document.getElementById('v-username').textContent    = vendorProfile.name.split(' ')[0];
       document.getElementById('v-service-tag').textContent = vendorProfile.service_emoji + ' ' + vendorProfile.service_name;
-      document.getElementById('vd-name').textContent     = vendorProfile.name.split(' ')[0];
-      document.getElementById('vd-service').textContent  = vendorProfile.service_emoji + ' ' + vendorProfile.service_name;
+      document.getElementById('vd-name').textContent       = vendorProfile.name.split(' ')[0];
+      document.getElementById('vd-service').textContent    = vendorProfile.service_emoji + ' ' + vendorProfile.service_name;
+      switchDashTab('myjobs');
       loadDashboard();
+      startAutoRefresh();
     }
 
     // Logged in via auth but no vendor profile — ask them to complete registration
@@ -398,9 +404,38 @@
   }
 
   async function vLogout() {
+    stopAutoRefresh();
     await sb.auth.signOut();
     vendorProfile = null;
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ══════════════════════════════════════════
+     TOAST & AUTO-REFRESH
+  ══════════════════════════════════════════ */
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('vd-toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.className = 'vd-toast show ' + type;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  function startAutoRefresh() {
+    stopAutoRefresh();
+    refreshTimer = setInterval(() => { if (vendorProfile) loadDashboard(true); }, 60000);
+  }
+
+  function stopAutoRefresh() {
+    if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+  }
+
+  async function manualRefresh() {
+    const btn = document.getElementById('btn-refresh');
+    btn.textContent = '↻ Refreshing…'; btn.disabled = true;
+    await loadDashboard();
+    btn.textContent = '↻ Refresh'; btn.disabled = false;
   }
 
   /* ── Login ── */
@@ -598,10 +633,16 @@
   /* ══════════════════════════════════════════
      DASHBOARD
   ══════════════════════════════════════════ */
-  async function loadDashboard() {
+  async function loadDashboard(silent = false) {
     if (!vendorProfile) return;
 
-    /* Fetch all bookings for vendor's service type */
+    if (!silent) {
+      document.getElementById('myjobs-list').innerHTML =
+        '<div class="vd-loading"><span class="vd-spinner"></span> Loading your jobs…</div>';
+      document.getElementById('available-list').innerHTML =
+        '<div class="vd-loading"><span class="vd-spinner"></span> Loading available jobs…</div>';
+    }
+
     const { data, error } = await sb
       .from('bookings')
       .select('*')
@@ -609,8 +650,11 @@
       .order('date', { ascending: true });
 
     if (error) {
-      document.getElementById('available-list').innerHTML =
-        `<div class="vd-empty">Could not load jobs: ${error.message}</div>`;
+      const msg = error.code === '42P01'
+        ? 'Database not fully set up yet. Please run <strong>supabase-setup.sql</strong> in Supabase SQL Editor.'
+        : `Could not load jobs: ${error.message}`;
+      document.getElementById('myjobs-list').innerHTML    = `<div class="vd-empty">${msg}</div>`;
+      document.getElementById('available-list').innerHTML = `<div class="vd-empty">${msg}</div>`;
       return;
     }
 
@@ -618,8 +662,8 @@
     myJobs        = (data || []).filter(b => b.vendor_id === vendorProfile.id);
 
     renderStats();
-    renderAvailableJobs();
     renderMyJobs();
+    renderAvailableJobs();
   }
 
   function renderStats() {
@@ -637,25 +681,11 @@
   }
 
   function switchDashTab(tab) {
-    const isAvailable = tab === 'available';
-    document.getElementById('vd-available').style.display = isAvailable ? '' : 'none';
-    document.getElementById('vd-myjobs').style.display    = isAvailable ? 'none' : '';
-    document.getElementById('vt-available').classList.toggle('active', isAvailable);
-    document.getElementById('vt-myjobs').classList.toggle('active', !isAvailable);
-  }
-
-  function renderAvailableJobs() {
-    const list = document.getElementById('available-list');
-    if (!availableJobs.length) {
-      list.innerHTML = `
-        <div class="vd-empty">
-          <div class="vd-empty-icon">🎉</div>
-          <p>No available jobs right now.</p>
-          <p class="vd-empty-sub">Check back soon — new bookings appear here automatically.</p>
-        </div>`;
-      return;
-    }
-    list.innerHTML = availableJobs.map(b => buildJobCard(b, 'available')).join('');
+    const isMyJobs = tab === 'myjobs';
+    document.getElementById('vd-myjobs').style.display    = isMyJobs ? '' : 'none';
+    document.getElementById('vd-available').style.display = isMyJobs ? 'none' : '';
+    document.getElementById('vt-myjobs').classList.toggle('active', isMyJobs);
+    document.getElementById('vt-available').classList.toggle('active', !isMyJobs);
   }
 
   function renderMyJobs() {
@@ -664,18 +694,29 @@
       list.innerHTML = `
         <div class="vd-empty">
           <div class="vd-empty-icon">📋</div>
-          <p>You haven't accepted any jobs yet.</p>
-          <p class="vd-empty-sub">Browse available jobs and click <strong>Accept Job</strong> to get started.</p>
+          <p>No jobs assigned yet.</p>
+          <p class="vd-empty-sub">Go to <strong>Available Jobs</strong> tab to find and accept jobs for your trade.</p>
+          <button class="job-action-btn accept" style="margin-top:1rem" onclick="switchDashTab('available')">Browse Available Jobs</button>
         </div>`;
       return;
     }
-
-    // Sort: In Progress first, then Scheduled, then Completed
     const order = { 'In Progress': 0, 'Scheduled': 1, 'Completed': 2 };
-    const sorted = [...myJobs].sort((a, b) =>
-      (order[a.status] ?? 3) - (order[b.status] ?? 3)
-    );
+    const sorted = [...myJobs].sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
     list.innerHTML = sorted.map(b => buildJobCard(b, 'mine')).join('');
+  }
+
+  function renderAvailableJobs() {
+    const list = document.getElementById('available-list');
+    if (!availableJobs.length) {
+      list.innerHTML = `
+        <div class="vd-empty">
+          <div class="vd-empty-icon">🎉</div>
+          <p>No new jobs available right now.</p>
+          <p class="vd-empty-sub">The dashboard refreshes every 60 seconds. You can also click ↻ Refresh to check immediately.</p>
+        </div>`;
+      return;
+    }
+    list.innerHTML = availableJobs.map(b => buildJobCard(b, 'available')).join('');
   }
 
   function buildJobCard(b, type) {
@@ -729,7 +770,12 @@
       .eq('id', bookingId)
       .is('vendor_id', null);
 
-    if (error) { alert('Could not accept job: ' + error.message); loadDashboard(); return; }
+    if (error) {
+      showToast('Could not accept job: ' + error.message, 'error');
+      if (btn) { btn.textContent = '✋ Accept Job'; btn.disabled = false; }
+      return;
+    }
+    showToast('Job accepted! Check My Jobs tab.', 'success');
     await loadDashboard();
     switchDashTab('myjobs');
   }
@@ -744,7 +790,12 @@
       .eq('id', bookingId)
       .eq('vendor_id', vendorProfile.id);
 
-    if (error) { alert('Could not update job: ' + error.message); }
+    if (error) {
+      showToast('Could not start job: ' + error.message, 'error');
+      if (btn) { btn.textContent = '▶ Start Job'; btn.disabled = false; }
+      return;
+    }
+    showToast('Job started — good luck!', 'success');
     await loadDashboard();
   }
 
@@ -758,7 +809,12 @@
       .eq('id', bookingId)
       .eq('vendor_id', vendorProfile.id);
 
-    if (error) { alert('Could not complete job: ' + error.message); }
+    if (error) {
+      showToast('Could not complete job: ' + error.message, 'error');
+      if (btn) { btn.textContent = '✅ Mark Complete'; btn.disabled = false; }
+      return;
+    }
+    showToast('Job marked as completed!', 'success');
     await loadDashboard();
   }
 </script>
