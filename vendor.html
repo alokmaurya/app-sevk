@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sevk — Vendor Portal</title>
+  <link rel="stylesheet" href="vendor.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════ -->
+<header class="v-header">
+  <a class="logo-wrap" href="index.html">
+    <div class="logo-icon">S</div>
+    <div>
+      <span class="logo-name">SEVK</span>
+      <span class="logo-sub">Vendor Portal</span>
+    </div>
+  </a>
+  <div class="header-right">
+    <!-- Guest -->
+    <div id="v-guest-btns">
+      <button class="btn-vlogin"  onclick="openModal('login')">Log In</button>
+      <button class="btn-vsignup" onclick="openModal('register')">Join as Vendor</button>
+    </div>
+    <!-- Logged-in vendor -->
+    <div class="v-user-menu" id="v-user-menu" style="display:none">
+      <div class="v-avatar" id="v-avatar"></div>
+      <span class="v-username" id="v-username"></span>
+      <span class="v-service-tag" id="v-service-tag"></span>
+      <button class="btn-vlogout" onclick="vLogout()">Log Out</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════
+     AUTH MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="auth-modal" onclick="closeModalOnOverlay(event)">
+  <div class="v-modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tab-login"    onclick="switchTab('login')">Log In</button>
+      <button class="modal-tab"        id="tab-register" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- Login -->
+    <div id="modal-login">
+      <h2 class="modal-title">Vendor Login</h2>
+      <p class="modal-sub">Access your job dashboard.</p>
+      <div class="form-group" id="li-fg-email">
+        <label for="li-email">Email Address</label>
+        <input type="email" id="li-email" placeholder="you@example.com" />
+        <span class="field-error">Please enter a valid email.</span>
+      </div>
+      <div class="form-group" id="li-fg-pass">
+        <label for="li-pass">Password</label>
+        <input type="password" id="li-pass" placeholder="••••••••" />
+        <span class="field-error">Please enter your password.</span>
+      </div>
+      <div class="modal-error" id="li-error"></div>
+      <button class="btn btn-primary modal-submit" id="li-btn" onclick="vLogin()">Log In</button>
+      <p class="modal-switch">Not registered? <a href="javascript:void(0)" onclick="switchTab('register')">Join as Vendor</a></p>
+    </div>
+
+    <!-- Register -->
+    <div id="modal-register" style="display:none">
+      <div id="reg-form-body">
+        <h2 class="modal-title">Join as a Vendor</h2>
+        <p class="modal-sub">Register to start receiving job bookings.</p>
+        <div class="form-row">
+          <div class="form-group" id="rg-fg-fname">
+            <label for="rg-fname">First Name</label>
+            <input type="text" id="rg-fname" placeholder="John" />
+            <span class="field-error">Required.</span>
+          </div>
+          <div class="form-group" id="rg-fg-lname">
+            <label for="rg-lname">Last Name</label>
+            <input type="text" id="rg-lname" placeholder="Smith" />
+            <span class="field-error">Required.</span>
+          </div>
+        </div>
+        <div class="form-group" id="rg-fg-phone">
+          <label for="rg-phone">Phone Number</label>
+          <input type="tel" id="rg-phone" placeholder="07700 900123" />
+          <span class="field-error">Please enter a valid phone number.</span>
+        </div>
+        <div class="form-group" id="rg-fg-service">
+          <label for="rg-service">Your Trade / Service</label>
+          <select id="rg-service">
+            <option value="">— Select your service —</option>
+            <option value="electrician" data-emoji="⚡" data-name="Electrician">⚡ Electrician</option>
+            <option value="plumber"     data-emoji="🔧" data-name="Plumber">🔧 Plumber</option>
+            <option value="wall"        data-emoji="🧱" data-name="Wall Specialists">🧱 Wall Specialists</option>
+            <option value="glass"       data-emoji="🪟" data-name="Glass Works">🪟 Glass Works</option>
+          </select>
+          <span class="field-error">Please select your trade.</span>
+        </div>
+        <div class="form-group" id="rg-fg-email">
+          <label for="rg-email">Email Address</label>
+          <input type="email" id="rg-email" placeholder="you@example.com" />
+          <span class="field-error">Please enter a valid email.</span>
+        </div>
+        <div class="form-group" id="rg-fg-pass">
+          <label for="rg-pass">Password</label>
+          <input type="password" id="rg-pass" placeholder="Min. 8 characters" />
+          <span class="field-error">Password must be at least 8 characters.</span>
+        </div>
+        <div class="modal-error" id="rg-error"></div>
+        <button class="btn btn-primary modal-submit" id="rg-btn" onclick="vRegister()">Create Vendor Account</button>
+        <p class="modal-switch">Already registered? <a href="javascript:void(0)" onclick="switchTab('login')">Log In</a></p>
+      </div>
+      <!-- Email confirmation state -->
+      <div id="reg-success" style="display:none" class="modal-success">
+        <div class="modal-success-icon">📧</div>
+        <h2 class="modal-title">Check your email!</h2>
+        <p class="modal-sub">A confirmation link has been sent to <strong id="reg-success-email"></strong>.<br>Click the link to activate your account then log in.</p>
+        <button class="btn btn-primary modal-submit" onclick="switchTab('login'); document.getElementById('reg-success').style.display='none'; document.getElementById('reg-form-body').style.display=''">Go to Log In</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     LANDING (guests)
+══════════════════════════════════════════ -->
+<div id="vendor-landing">
+
+  <!-- Hero -->
+  <section class="v-hero">
+    <div class="v-hero-content">
+      <div class="v-hero-badge">🔧 For Tradespeople & Specialists</div>
+      <h1 class="v-hero-title">Get More Jobs.<br>Work on Your Terms.</h1>
+      <p class="v-hero-sub">Join the Sevk vendor network and receive bookings directly from local customers — 24 hours a day, 7 days a week.</p>
+      <div class="v-hero-cta">
+        <button class="btn-vsignup-lg" onclick="openModal('register')">Register as a Vendor</button>
+        <button class="btn-vlogin-lg"  onclick="openModal('login')">Vendor Log In</button>
+      </div>
+    </div>
+    <div class="v-hero-visual">
+      <div class="v-hero-card">
+        <div class="vhc-label">New Job Assigned</div>
+        <div class="vhc-row"><span>⚡</span><strong>Electrician — Wiring repair</strong></div>
+        <div class="vhc-row"><span>📅</span><span>Wed 14 May · 10:00 AM</span></div>
+        <div class="vhc-row"><span>📍</span><span>12 High Street, London</span></div>
+        <div class="vhc-actions">
+          <span class="vhc-badge scheduled">Scheduled</span>
+          <button class="vhc-btn">Start Job →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits -->
+  <section class="v-land-section">
+    <div class="v-land-container">
+      <h2 class="v-section-title">Why Join Sevk?</h2>
+      <p class="v-section-sub">Everything you need to manage your work in one place.</p>
+      <div class="v-benefits">
+        <div class="v-benefit-card">
+          <div class="v-benefit-icon">📲</div>
+          <h3>Jobs Sent to You</h3>
+          <p>Receive bookings from customers automatically matched to your trade — no chasing required.</p>
+        </div>
+        <div class="v-benefit-card">
+          <div class="v-benefit-icon">🗓️</div>
+          <h3>Manage Your Schedule</h3>
+          <p>View all your upcoming, active and completed jobs in a clear dashboard.</p>
+        </div>
+        <div class="v-benefit-card">
+          <div class="v-benefit-icon">✅</div>
+          <h3>Simple Job Updates</h3>
+          <p>Start and complete jobs with one tap — keeping customers informed at every step.</p>
+        </div>
+        <div class="v-benefit-card">
+          <div class="v-benefit-icon">🆓</div>
+          <h3>Free to Join</h3>
+          <p>No subscription fees. Register your trade and start receiving jobs immediately.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trades -->
+  <section class="v-land-section v-land-dark">
+    <div class="v-land-container">
+      <h2 class="v-section-title" style="color:#fff">We're Looking For</h2>
+      <p class="v-section-sub" style="color:#aaa">Experienced tradespeople in these areas.</p>
+      <div class="v-trades">
+        <div class="v-trade-card"><span>⚡</span><strong>Electricians</strong><p>Wiring, panels & repairs</p></div>
+        <div class="v-trade-card"><span>🔧</span><strong>Plumbers</strong><p>Leaks, pipes & installations</p></div>
+        <div class="v-trade-card"><span>🧱</span><strong>Wall Specialists</strong><p>Plastering, drywall & finishes</p></div>
+        <div class="v-trade-card"><span>🪟</span><strong>Glass Works</strong><p>Windows, doors & glazing</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="v-land-cta">
+    <div class="v-land-container" style="text-align:center">
+      <h2>Ready to start?</h2>
+      <p>Join hundreds of tradespeople already using Sevk.</p>
+      <button class="btn-vsignup-lg" onclick="openModal('register')">Register Now — It's Free</button>
+    </div>
+  </section>
+
+  <footer class="v-footer">
+    <div class="v-land-container v-footer-inner">
+      <div class="v-footer-brand">
+        <div class="logo-icon" style="display:inline-flex">S</div>
+        <span class="logo-name">SEVK</span>
+        <span style="color:#444;margin-left:0.5rem">Vendor Portal</span>
+      </div>
+      <div class="v-footer-links">
+        <a href="index.html">← Customer Site</a>
+        <span>&copy; 2026 Sevk. MIT License.</span>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /vendor-landing -->
+
+<!-- ══════════════════════════════════════════
+     VENDOR DASHBOARD (logged in)
+══════════════════════════════════════════ -->
+<div id="vendor-dashboard" style="display:none">
+  <div class="vd-container">
+
+    <!-- Dashboard header -->
+    <div class="vd-header">
+      <div>
+        <h1 class="vd-title">Job Dashboard</h1>
+        <p class="vd-sub">Welcome back, <span id="vd-name"></span> · <span id="vd-service"></span></p>
+      </div>
+      <button class="btn-refresh" onclick="loadDashboard()" title="Refresh jobs">↻ Refresh</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="vd-stats">
+      <div class="vd-stat-card">
+        <div class="vd-stat-icon">📋</div>
+        <div class="vd-stat-num" id="vd-stat-available">—</div>
+        <div class="vd-stat-label">Available Jobs</div>
+      </div>
+      <div class="vd-stat-card">
+        <div class="vd-stat-icon" style="color:#3b82f6">📅</div>
+        <div class="vd-stat-num" id="vd-stat-scheduled">—</div>
+        <div class="vd-stat-label">My Scheduled</div>
+      </div>
+      <div class="vd-stat-card">
+        <div class="vd-stat-icon" style="color:#f59e0b">⚙️</div>
+        <div class="vd-stat-num" id="vd-stat-inprogress">—</div>
+        <div class="vd-stat-label">In Progress</div>
+      </div>
+      <div class="vd-stat-card">
+        <div class="vd-stat-icon" style="color:#10b981">✅</div>
+        <div class="vd-stat-num" id="vd-stat-completed">—</div>
+        <div class="vd-stat-label">Completed</div>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="vd-tabs">
+      <button class="vd-tab active" id="vt-available" onclick="switchDashTab('available')">
+        Available Jobs <span class="vd-tab-badge" id="badge-available"></span>
+      </button>
+      <button class="vd-tab" id="vt-myjobs" onclick="switchDashTab('myjobs')">
+        My Jobs <span class="vd-tab-badge" id="badge-myjobs"></span>
+      </button>
+    </div>
+
+    <!-- Available Jobs -->
+    <div id="vd-available">
+      <div id="available-list"><div class="vd-loading">Loading available jobs…</div></div>
+    </div>
+
+    <!-- My Jobs -->
+    <div id="vd-myjobs" style="display:none">
+      <div id="myjobs-list"><div class="vd-loading">Loading your jobs…</div></div>
+    </div>
+
+  </div>
+</div><!-- /vendor-dashboard -->
+
+<script>
+  /* ══════════════════════════════════════════
+     CONFIG — same project as customer app
+  ══════════════════════════════════════════ */
+  const SUPABASE_URL      = 'https://pkhpkmpscznqkgasxwdm.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBraHBrbXBzY3pucWtnYXN4d2RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDgzODAsImV4cCI6MjA5Mzk4NDM4MH0.y6hpeO_joE9AcdmfYEofsDSwqvGsCVRPbSUo3VtsbgY';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  /* ══ State ══ */
+  let currentUser   = null;
+  let vendorProfile = null;
+  let availableJobs = [];
+  let myJobs        = [];
+
+  const STATUS_META = {
+    'Scheduled':   { cls: 'status-scheduled',   label: 'Scheduled'   },
+    'In Progress': { cls: 'status-inprogress',  label: 'In Progress' },
+    'Completed':   { cls: 'status-completed',   label: 'Completed'   },
+  };
+
+  /* ══════════════════════════════════════════
+     AUTH
+  ══════════════════════════════════════════ */
+  sb.auth.onAuthStateChange(async (_event, session) => {
+    currentUser = session?.user ?? null;
+    if (currentUser) {
+      await fetchVendorProfile();
+    } else {
+      vendorProfile = null;
+    }
+    applyAuthState();
+  });
+
+  async function fetchVendorProfile() {
+    const { data } = await sb
+      .from('vendors')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+    vendorProfile = data;
+  }
+
+  function applyAuthState() {
+    const loggedIn = !!currentUser && !!vendorProfile;
+    const authOnly = !!currentUser && !vendorProfile;
+
+    document.getElementById('vendor-landing').style.display   = loggedIn ? 'none' : '';
+    document.getElementById('vendor-dashboard').style.display = loggedIn ? ''     : 'none';
+    document.getElementById('v-guest-btns').style.display     = currentUser ? 'none' : '';
+    document.getElementById('v-user-menu').style.display      = currentUser ? ''     : 'none';
+
+    if (currentUser && vendorProfile) {
+      const initials = vendorProfile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      document.getElementById('v-avatar').textContent    = initials;
+      document.getElementById('v-username').textContent  = vendorProfile.name.split(' ')[0];
+      document.getElementById('v-service-tag').textContent = vendorProfile.service_emoji + ' ' + vendorProfile.service_name;
+      document.getElementById('vd-name').textContent     = vendorProfile.name.split(' ')[0];
+      document.getElementById('vd-service').textContent  = vendorProfile.service_emoji + ' ' + vendorProfile.service_name;
+      loadDashboard();
+    }
+
+    // Logged in via auth but no vendor profile — ask them to complete registration
+    if (authOnly) {
+      document.getElementById('v-guest-btns').style.display = 'none';
+      document.getElementById('v-user-menu').style.display  = '';
+      document.getElementById('v-username').textContent     = currentUser.email;
+      document.getElementById('v-service-tag').textContent  = '';
+      document.getElementById('v-avatar').textContent       = '?';
+      // Re-open modal so they can complete vendor profile
+      openModal('register');
+      document.getElementById('rg-error').textContent =
+        'Please complete your vendor profile to continue.';
+    }
+  }
+
+  async function vLogout() {
+    await sb.auth.signOut();
+    vendorProfile = null;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ── Login ── */
+  async function vLogin() {
+    let ok = true;
+    function chk(gId, iId, test) {
+      const val = document.getElementById(iId).value.trim();
+      document.getElementById(gId).classList.toggle('error', !test(val));
+      if (!test(val)) ok = false;
+    }
+    chk('li-fg-email', 'li-email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+    chk('li-fg-pass',  'li-pass',  v => v.length >= 1);
+    if (!ok) return;
+
+    const btn = document.getElementById('li-btn');
+    btn.textContent = 'Logging in…'; btn.disabled = true;
+    document.getElementById('li-error').textContent = '';
+
+    try {
+      const { error } = await sb.auth.signInWithPassword({
+        email:    document.getElementById('li-email').value.trim(),
+        password: document.getElementById('li-pass').value,
+      });
+
+      if (error) {
+        document.getElementById('li-error').textContent =
+          error.message === 'Invalid login credentials'
+            ? 'Incorrect email or password.'
+            : error.message;
+        return;
+      }
+      closeModal();
+    } catch (e) {
+      document.getElementById('li-error').textContent =
+        'Connection error. Check your internet and try again.';
+    } finally {
+      btn.textContent = 'Log In'; btn.disabled = false;
+    }
+  }
+
+  /* ── Register ── */
+  async function vRegister() {
+    let ok = true;
+    function chk(gId, iId, test) {
+      const val = document.getElementById(iId).value.trim();
+      document.getElementById(gId).classList.toggle('error', !test(val));
+      if (!test(val)) ok = false;
+    }
+    chk('rg-fg-fname',   'rg-fname',   v => v.length >= 1);
+    chk('rg-fg-lname',   'rg-lname',   v => v.length >= 1);
+    chk('rg-fg-phone',   'rg-phone',   v => /^[\d\s\+\-\(\)]{7,}$/.test(v));
+    chk('rg-fg-service', 'rg-service', v => v.length > 0);
+    chk('rg-fg-email',   'rg-email',   v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+    chk('rg-fg-pass',    'rg-pass',    v => v.length >= 8);
+    if (!ok) return;
+
+    const sel       = document.getElementById('rg-service');
+    const opt       = sel.options[sel.selectedIndex];
+    const firstName = document.getElementById('rg-fname').value.trim();
+    const lastName  = document.getElementById('rg-lname').value.trim();
+    const fullName  = (firstName + ' ' + lastName).trim();
+    const email     = document.getElementById('rg-email').value.trim();
+    const phone     = document.getElementById('rg-phone').value.trim();
+    const serviceId    = sel.value;
+    const serviceName  = opt.dataset.name;
+    const serviceEmoji = opt.dataset.emoji;
+
+    const btn = document.getElementById('rg-btn');
+    btn.textContent = 'Creating account…'; btn.disabled = true;
+    document.getElementById('rg-error').textContent = '';
+
+    try {
+      /* 1 — Create auth account */
+      const { data: authData, error: authError } = await sb.auth.signUp({
+        email,
+        password: document.getElementById('rg-pass').value,
+        options:  { data: { first_name: firstName, last_name: lastName } },
+      });
+
+      if (authError) {
+        document.getElementById('rg-error').textContent = authError.message;
+        return;
+      }
+
+      /* 2 — Create vendor profile (only if session exists, i.e. email confirm OFF) */
+      if (authData.session) {
+        const { error: vendorError } = await sb.from('vendors').insert({
+          user_id:       authData.user.id,
+          name:          fullName,
+          phone,
+          email,
+          service_id:    serviceId,
+          service_name:  serviceName,
+          service_emoji: serviceEmoji,
+        });
+
+        if (vendorError) {
+          document.getElementById('rg-error').textContent = vendorError.message;
+          return;
+        }
+        closeModal();
+      } else {
+        /* Email confirmation required — show success panel */
+        document.getElementById('reg-form-body').style.display = 'none';
+        document.getElementById('reg-success-email').textContent = email;
+        document.getElementById('reg-success').style.display = '';
+      }
+    } catch (e) {
+      document.getElementById('rg-error').textContent =
+        'Connection error. Check your internet and try again.';
+    } finally {
+      btn.textContent = 'Create Vendor Account'; btn.disabled = false;
+    }
+  }
+
+  /* ══════════════════════════════════════════
+     MODAL HELPERS
+  ══════════════════════════════════════════ -->*/
+  function openModal(tab) {
+    switchTab(tab);
+    document.getElementById('auth-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('auth-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeModalOnOverlay(e) {
+    if (e.target === document.getElementById('auth-modal')) closeModal();
+  }
+
+  function switchTab(tab) {
+    document.getElementById('modal-login').style.display    = tab === 'login'    ? '' : 'none';
+    document.getElementById('modal-register').style.display = tab === 'register' ? '' : 'none';
+    document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    document.getElementById('li-error').textContent = '';
+    document.getElementById('rg-error').textContent = '';
+    document.querySelectorAll('#auth-modal .form-group').forEach(fg => fg.classList.remove('error'));
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeModal(); return; }
+    if (e.key === 'Enter' && document.getElementById('auth-modal').classList.contains('open')) {
+      document.getElementById('modal-login').style.display !== 'none' ? vLogin() : vRegister();
+    }
+  });
+
+  /* ══════════════════════════════════════════
+     DASHBOARD
+  ══════════════════════════════════════════ */
+  async function loadDashboard() {
+    if (!vendorProfile) return;
+
+    /* Fetch all bookings for vendor's service type */
+    const { data, error } = await sb
+      .from('bookings')
+      .select('*')
+      .eq('service_id', vendorProfile.service_id)
+      .order('date', { ascending: true });
+
+    if (error) {
+      document.getElementById('available-list').innerHTML =
+        `<div class="vd-empty">Could not load jobs: ${error.message}</div>`;
+      return;
+    }
+
+    availableJobs = (data || []).filter(b => !b.vendor_id);
+    myJobs        = (data || []).filter(b => b.vendor_id === vendorProfile.id);
+
+    renderStats();
+    renderAvailableJobs();
+    renderMyJobs();
+  }
+
+  function renderStats() {
+    const scheduled  = myJobs.filter(b => b.status === 'Scheduled').length;
+    const inProgress = myJobs.filter(b => b.status === 'In Progress').length;
+    const completed  = myJobs.filter(b => b.status === 'Completed').length;
+
+    document.getElementById('vd-stat-available').textContent  = availableJobs.length;
+    document.getElementById('vd-stat-scheduled').textContent  = scheduled;
+    document.getElementById('vd-stat-inprogress').textContent = inProgress;
+    document.getElementById('vd-stat-completed').textContent  = completed;
+
+    document.getElementById('badge-available').textContent = availableJobs.length || '';
+    document.getElementById('badge-myjobs').textContent    = (scheduled + inProgress) || '';
+  }
+
+  function switchDashTab(tab) {
+    const isAvailable = tab === 'available';
+    document.getElementById('vd-available').style.display = isAvailable ? '' : 'none';
+    document.getElementById('vd-myjobs').style.display    = isAvailable ? 'none' : '';
+    document.getElementById('vt-available').classList.toggle('active', isAvailable);
+    document.getElementById('vt-myjobs').classList.toggle('active', !isAvailable);
+  }
+
+  function renderAvailableJobs() {
+    const list = document.getElementById('available-list');
+    if (!availableJobs.length) {
+      list.innerHTML = `
+        <div class="vd-empty">
+          <div class="vd-empty-icon">🎉</div>
+          <p>No available jobs right now.</p>
+          <p class="vd-empty-sub">Check back soon — new bookings appear here automatically.</p>
+        </div>`;
+      return;
+    }
+    list.innerHTML = availableJobs.map(b => buildJobCard(b, 'available')).join('');
+  }
+
+  function renderMyJobs() {
+    const list = document.getElementById('myjobs-list');
+    if (!myJobs.length) {
+      list.innerHTML = `
+        <div class="vd-empty">
+          <div class="vd-empty-icon">📋</div>
+          <p>You haven't accepted any jobs yet.</p>
+          <p class="vd-empty-sub">Browse available jobs and click <strong>Accept Job</strong> to get started.</p>
+        </div>`;
+      return;
+    }
+
+    // Sort: In Progress first, then Scheduled, then Completed
+    const order = { 'In Progress': 0, 'Scheduled': 1, 'Completed': 2 };
+    const sorted = [...myJobs].sort((a, b) =>
+      (order[a.status] ?? 3) - (order[b.status] ?? 3)
+    );
+    list.innerHTML = sorted.map(b => buildJobCard(b, 'mine')).join('');
+  }
+
+  function buildJobCard(b, type) {
+    const d       = new Date(b.date + 'T00:00:00');
+    const dateStr = d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const status  = b.status || 'Scheduled';
+    const sm      = STATUS_META[status] || STATUS_META['Scheduled'];
+
+    let actionBtn = '';
+    if (type === 'available') {
+      actionBtn = `<button class="job-action-btn accept" onclick="acceptJob('${b.id}')">✋ Accept Job</button>`;
+    } else if (status === 'Scheduled') {
+      actionBtn = `<button class="job-action-btn start" onclick="startJob('${b.id}')">▶ Start Job</button>`;
+    } else if (status === 'In Progress') {
+      actionBtn = `<button class="job-action-btn complete" onclick="completeJob('${b.id}')">✅ Mark Complete</button>`;
+    }
+
+    return `
+      <div class="job-card" id="jc-${b.id}">
+        <div class="job-card-top">
+          <div class="job-service">
+            <span class="job-emoji">${b.service_emoji}</span>
+            <div>
+              <div class="job-service-name">${b.service_name}</div>
+              <div class="job-ref">${b.ref_number}</div>
+            </div>
+          </div>
+          <span class="bk-status ${sm.cls}">${sm.label}</span>
+        </div>
+        <div class="job-card-body">
+          <div class="job-row"><span class="job-row-icon">📅</span><span><strong>${dateStr}</strong> at <strong>${b.time}</strong></span></div>
+          <div class="job-row"><span class="job-row-icon">👤</span><span>${b.name}</span></div>
+          <div class="job-row"><span class="job-row-icon">📞</span><span>${b.phone}</span></div>
+          <div class="job-row"><span class="job-row-icon">📍</span><span>${b.address}</span></div>
+          ${b.notes ? `<div class="job-row"><span class="job-row-icon">📝</span><span>${b.notes}</span></div>` : ''}
+        </div>
+        ${actionBtn ? `<div class="job-card-footer">${actionBtn}</div>` : `<div class="job-card-footer"><span style="color:#888;font-size:0.78rem">Job completed</span></div>`}
+      </div>`;
+  }
+
+  /* ══════════════════════════════════════════
+     JOB ACTIONS
+  ══════════════════════════════════════════ */
+  async function acceptJob(bookingId) {
+    const btn = document.querySelector(`#jc-${bookingId} .job-action-btn`);
+    if (btn) { btn.textContent = 'Accepting…'; btn.disabled = true; }
+
+    const { error } = await sb
+      .from('bookings')
+      .update({ vendor_id: vendorProfile.id, status: 'Scheduled' })
+      .eq('id', bookingId)
+      .is('vendor_id', null);
+
+    if (error) { alert('Could not accept job: ' + error.message); loadDashboard(); return; }
+    await loadDashboard();
+    switchDashTab('myjobs');
+  }
+
+  async function startJob(bookingId) {
+    const btn = document.querySelector(`#jc-${bookingId} .job-action-btn`);
+    if (btn) { btn.textContent = 'Updating…'; btn.disabled = true; }
+
+    const { error } = await sb
+      .from('bookings')
+      .update({ status: 'In Progress' })
+      .eq('id', bookingId)
+      .eq('vendor_id', vendorProfile.id);
+
+    if (error) { alert('Could not update job: ' + error.message); }
+    await loadDashboard();
+  }
+
+  async function completeJob(bookingId) {
+    const btn = document.querySelector(`#jc-${bookingId} .job-action-btn`);
+    if (btn) { btn.textContent = 'Completing…'; btn.disabled = true; }
+
+    const { error } = await sb
+      .from('bookings')
+      .update({ status: 'Completed' })
+      .eq('id', bookingId)
+      .eq('vendor_id', vendorProfile.id);
+
+    if (error) { alert('Could not complete job: ' + error.message); }
+    await loadDashboard();
+  }
+</script>
+
+</body>
+</html>
