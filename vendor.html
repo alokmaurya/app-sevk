@@ -283,6 +283,16 @@
       <div id="available-list"><div class="vd-loading"><span class="vd-spinner"></span> Loading available jobs…</div></div>
     </div>
 
+    <!-- Complete profile (shown when auth exists but no vendor profile) -->
+    <div id="vd-complete-profile" style="display:none">
+      <div class="vd-empty" style="padding:4rem 1rem">
+        <div class="vd-empty-icon">👤</div>
+        <p>Complete Your Vendor Profile</p>
+        <p class="vd-empty-sub">Your account is set up but your vendor profile is missing.<br>Fill in your trade details below to start receiving jobs.</p>
+        <button class="job-action-btn accept" style="margin-top:1.5rem" onclick="openCompleteProfile()">Complete Registration →</button>
+      </div>
+    </div>
+
   </div>
 
   <!-- Toast notification -->
@@ -366,38 +376,56 @@
     const loggedIn = !!currentUser && !!vendorProfile;
     const authOnly = !!currentUser && !vendorProfile;
 
-    document.getElementById('vendor-landing').style.display   = loggedIn ? 'none' : '';
-    document.getElementById('vendor-dashboard').style.display = loggedIn ? ''     : 'none';
+    /* Landing only for guests; dashboard for everyone logged in */
+    document.getElementById('vendor-landing').style.display   = currentUser ? 'none' : '';
+    document.getElementById('vendor-dashboard').style.display = currentUser ? ''     : 'none';
     document.getElementById('v-guest-btns').style.display     = currentUser ? 'none' : '';
     document.getElementById('v-user-menu').style.display      = currentUser ? ''     : 'none';
 
-    if (currentUser && vendorProfile) {
+    if (loggedIn) {
       const initials = vendorProfile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
       document.getElementById('v-avatar').textContent      = initials;
       document.getElementById('v-username').textContent    = vendorProfile.name.split(' ')[0];
       document.getElementById('v-service-tag').textContent = vendorProfile.service_emoji + ' ' + vendorProfile.service_name;
       document.getElementById('vd-name').textContent       = vendorProfile.name.split(' ')[0];
       document.getElementById('vd-service').textContent    = vendorProfile.service_emoji + ' ' + vendorProfile.service_name;
+      /* show job sections, hide complete-profile */
+      document.getElementById('vd-stats').style.display            = '';
+      document.getElementById('vd-tabs').style.display             = '';
+      document.getElementById('vd-myjobs').style.display           = '';
+      document.getElementById('btn-refresh').style.display         = '';
+      document.getElementById('vd-complete-profile').style.display = 'none';
+      /* show email/pass fields for fresh registrations */
+      document.getElementById('rg-fg-email').style.display = '';
+      document.getElementById('rg-fg-pass').style.display  = '';
       switchDashTab('myjobs');
       loadDashboard();
       startAutoRefresh();
     }
 
     if (authOnly) {
-      document.getElementById('v-guest-btns').style.display = 'none';
-      document.getElementById('v-user-menu').style.display  = '';
-      document.getElementById('v-username').textContent     = currentUser.email;
-      document.getElementById('v-service-tag').textContent  = '';
-      document.getElementById('v-avatar').textContent       = '?';
+      document.getElementById('v-avatar').textContent      = '?';
+      document.getElementById('v-username').textContent    = currentUser.email.split('@')[0];
+      document.getElementById('v-service-tag').textContent = '';
+      document.getElementById('vd-name').textContent       = currentUser.email.split('@')[0];
+      document.getElementById('vd-service').textContent    = 'profile incomplete';
+      /* hide job sections, show complete-profile */
+      document.getElementById('vd-stats').style.display            = 'none';
+      document.getElementById('vd-tabs').style.display             = 'none';
+      document.getElementById('vd-myjobs').style.display           = 'none';
+      document.getElementById('vd-available').style.display        = 'none';
+      document.getElementById('btn-refresh').style.display         = 'none';
+      document.getElementById('vd-complete-profile').style.display = '';
+      /* hide email/pass fields — user already has an auth account */
       document.getElementById('rg-fg-email').style.display = 'none';
       document.getElementById('rg-fg-pass').style.display  = 'none';
-      openModal('register');
-      document.getElementById('rg-error').textContent =
-        'Account verified! Please complete your vendor profile to continue.';
-    } else {
-      document.getElementById('rg-fg-email').style.display = '';
-      document.getElementById('rg-fg-pass').style.display  = '';
     }
+  }
+
+  function openCompleteProfile() {
+    document.getElementById('rg-error').textContent =
+      'Your account is verified. Fill in your trade details to continue.';
+    openModal('register');
   }
 
   async function vLogout() {
