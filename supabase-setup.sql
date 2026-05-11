@@ -18,6 +18,8 @@ create table public.bookings (
   email          text        not null,
   address        text        not null,
   notes          text        default '',
+  status         text        default 'Scheduled'
+                             check (status in ('Scheduled', 'In Progress', 'Completed')),
   created_at     timestamptz default now()
 );
 
@@ -31,3 +33,10 @@ create policy "Users can insert their own bookings"
 create policy "Users can view their own bookings"
   on public.bookings for select
   using (auth.uid() = user_id);
+
+-- ══════════════════════════════════════════
+-- IF YOUR TABLE ALREADY EXISTS — run only this:
+-- ══════════════════════════════════════════
+-- alter table public.bookings
+--   add column if not exists status text default 'Scheduled'
+--   check (status in ('Scheduled', 'In Progress', 'Completed'));
