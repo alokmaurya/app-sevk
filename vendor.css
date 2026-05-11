@@ -86,7 +86,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 }
 .btn-vsignup:hover { background: var(--red-dark); }
 
-/* Logged-in header */
 .v-user-menu { display: flex; align-items: center; gap: 0.6rem; }
 
 .v-avatar {
@@ -122,73 +121,32 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .btn-vlogout:hover { border-color: var(--red); color: var(--red); }
 
 /* ══════════════════════════════════════════
-   AUTH MODAL
+   HEADER NAV (logged-in)
 ══════════════════════════════════════════ */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 200;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-.modal-overlay.open { display: flex; }
-
-.v-modal {
-  background: var(--surface);
-  border-radius: 14px;
-  padding: 2rem;
-  width: 100%;
-  max-width: 460px;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  box-shadow: var(--shadow-lg);
-}
-
-.modal-close {
-  position: absolute;
-  top: 1rem; right: 1rem;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  line-height: 1;
-  color: var(--muted);
-  cursor: pointer;
-  width: 30px; height: 30px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 50%;
-  transition: background 0.15s;
-}
-.modal-close:hover { background: var(--bg); color: var(--text); }
-
-.modal-tabs {
+.v-nav {
   display: flex;
-  gap: 0;
-  border-bottom: 2px solid var(--border);
-  margin-bottom: 1.5rem;
+  align-items: center;
+  gap: 0.2rem;
+  margin-right: 0.5rem;
 }
 
-.modal-tab {
-  flex: 1;
-  background: none;
+.v-nav-btn {
+  background: transparent;
   border: none;
-  padding: 0.65rem 1rem;
-  font-size: 0.92rem;
+  color: rgba(255,255,255,0.65);
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.88rem;
   font-weight: 600;
-  color: var(--muted);
   cursor: pointer;
-  border-bottom: 2.5px solid transparent;
-  margin-bottom: -2px;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s, background 0.15s;
 }
-.modal-tab.active { color: var(--red); border-bottom-color: var(--red); }
+.v-nav-btn:hover  { color: #fff; background: rgba(255,255,255,0.08); }
+.v-nav-btn.active { color: #fff; background: rgba(255,255,255,0.13); }
 
-.modal-title { font-size: 1.25rem; font-weight: 800; color: var(--black); margin-bottom: 0.3rem; }
-.modal-sub   { color: var(--muted); font-size: 0.88rem; margin-bottom: 1.25rem; }
-
+/* ══════════════════════════════════════════
+   FORM SHARED
+══════════════════════════════════════════ */
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 
 .form-group { margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.3rem; }
@@ -211,7 +169,63 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .field-error { display: none; font-size: 0.75rem; color: #e74c3c; }
 .form-group.error .field-error { display: block; }
 
-.modal-error {
+.btn { display: block; width: 100%; padding: 0.75rem 1rem; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+.btn-primary { background: var(--red); color: #fff; }
+.btn-primary:hover { background: var(--red-dark); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ══════════════════════════════════════════
+   AUTH PAGES (login / register)
+══════════════════════════════════════════ */
+.auth-page {
+  min-height: calc(100vh - 60px);
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.auth-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.4);
+}
+.auth-card.wide { max-width: 520px; }
+
+.auth-logo { text-align: center; margin-bottom: 1.5rem; }
+
+.auth-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #111;
+  text-align: center;
+  margin-bottom: 0.35rem;
+}
+
+.auth-sub {
+  color: var(--muted);
+  font-size: 0.88rem;
+  text-align: center;
+  margin-bottom: 1.75rem;
+  line-height: 1.5;
+}
+
+.auth-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin: 0.5rem 0 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.auth-error {
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #b91c1c;
@@ -221,27 +235,26 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   margin-bottom: 0.75rem;
   display: none;
 }
-.modal-error:not(:empty) { display: block; }
+.auth-error:not(:empty) { display: block; }
 
-.btn { display: block; width: 100%; padding: 0.75rem 1rem; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
-.btn-primary { background: var(--red); color: #fff; }
-.btn-primary:hover { background: var(--red-dark); }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.auth-switch {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+.auth-switch a { color: var(--red); font-weight: 600; text-decoration: none; }
 
-.modal-submit { margin-top: 0.25rem; }
+.auth-back { text-align: center; margin-top: 0.5rem; font-size: 0.82rem; }
+.auth-back a { color: var(--muted); text-decoration: none; }
+.auth-back a:hover { color: var(--text); }
 
-.modal-switch { text-align: center; margin-top: 1rem; font-size: 0.84rem; color: var(--muted); }
-.modal-switch a { color: var(--red); font-weight: 600; text-decoration: none; }
-
-/* Email confirmation success state */
-.modal-success { text-align: center; padding: 1rem 0; }
-.modal-success-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+.auth-success { text-align: center; padding: 1rem 0; }
+.auth-success-icon { font-size: 3.5rem; margin-bottom: 1rem; }
 
 /* ══════════════════════════════════════════
    LANDING PAGE
 ══════════════════════════════════════════ */
-
-/* ── Hero ── */
 .v-hero {
   background: var(--black);
   padding: 5rem 2rem 4rem;
@@ -276,7 +289,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 }
 
 .v-hero-sub { font-size: 1.05rem; color: #aaa; line-height: 1.6; margin-bottom: 2rem; }
-
 .v-hero-cta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 
 .btn-vsignup-lg {
@@ -305,7 +317,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 }
 .btn-vlogin-lg:hover { border-color: #fff; color: #fff; }
 
-/* Hero visual card */
 .v-hero-visual { flex-shrink: 0; }
 
 .v-hero-card {
@@ -326,14 +337,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   margin-bottom: 1rem;
 }
 
-.vhc-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.65rem;
-  color: #ccc;
-  font-size: 0.87rem;
-}
+.vhc-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.65rem; color: #ccc; font-size: 0.87rem; }
 .vhc-row strong { color: #fff; }
 
 .vhc-actions {
@@ -345,26 +349,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   border-top: 1px solid #333;
 }
 
-.vhc-badge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.25rem 0.65rem;
-  border-radius: 20px;
-}
+.vhc-badge { font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 20px; }
 .vhc-badge.scheduled { background: #eff6ff; color: #1d4ed8; }
 
-.vhc-btn {
-  background: var(--red);
-  color: #fff;
-  border: none;
-  padding: 0.4rem 0.85rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-}
+.vhc-btn { background: var(--red); color: #fff; border: none; padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
 
-/* ── Landing sections ── */
 .v-land-section { padding: 4rem 2rem; }
 .v-land-dark { background: #1a1a1a; }
 .v-land-container { max-width: 1100px; margin: 0 auto; }
@@ -372,12 +361,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .v-section-title { font-size: 1.85rem; font-weight: 800; color: var(--black); text-align: center; margin-bottom: 0.5rem; }
 .v-section-sub   { color: var(--muted); text-align: center; margin-bottom: 2.5rem; font-size: 1rem; }
 
-/* Benefits grid */
-.v-benefits {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem;
-}
+.v-benefits { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
 
 .v-benefit-card {
   background: var(--surface);
@@ -392,34 +376,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .v-benefit-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--black); }
 .v-benefit-card p  { color: var(--muted); font-size: 0.88rem; line-height: 1.55; }
 
-/* Trades grid */
-.v-trades {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.25rem;
-}
+.v-trades { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; }
 
-.v-trade-card {
-  background: #262626;
-  border: 1px solid #333;
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  text-align: center;
-  color: #eee;
-}
+.v-trade-card { background: #262626; border: 1px solid #333; border-radius: var(--radius); padding: 1.5rem; text-align: center; color: #eee; }
 .v-trade-card span { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
 .v-trade-card strong { display: block; font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; color: #fff; }
 .v-trade-card p { color: #888; font-size: 0.83rem; }
 
-/* CTA banner */
-.v-land-cta {
-  background: var(--red);
-  padding: 4rem 2rem;
-}
+.v-land-cta { background: var(--red); padding: 4rem 2rem; }
 .v-land-cta h2 { font-size: 2rem; font-weight: 900; color: #fff; margin-bottom: 0.5rem; }
 .v-land-cta p  { color: rgba(255,255,255,0.8); margin-bottom: 1.75rem; font-size: 1.05rem; }
 
-/* Footer */
 .v-footer { background: var(--black); padding: 1.5rem 2rem; }
 .v-footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
 .v-footer-brand { display: flex; align-items: center; gap: 0.5rem; }
@@ -433,13 +400,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 ══════════════════════════════════════════ */
 .vd-container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 
-.vd-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.75rem;
-}
+.vd-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.75rem; }
 
 .vd-title { font-size: 1.65rem; font-weight: 800; color: var(--black); }
 .vd-sub   { color: var(--muted); font-size: 0.9rem; margin-top: 0.15rem; }
@@ -459,33 +420,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 }
 .btn-refresh:hover { border-color: var(--red); color: var(--red); }
 
-/* Stats row */
-.vd-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.75rem;
-}
+.vd-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.75rem; }
 
-.vd-stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.25rem;
-  text-align: center;
-  box-shadow: var(--shadow);
-}
+.vd-stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; text-align: center; box-shadow: var(--shadow); }
 .vd-stat-icon  { font-size: 1.5rem; margin-bottom: 0.4rem; }
 .vd-stat-num   { font-size: 1.9rem; font-weight: 900; color: var(--black); line-height: 1; }
 .vd-stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; font-weight: 600; letter-spacing: 0.02em; }
 
-/* Tab bar */
-.vd-tabs {
-  display: flex;
-  gap: 0;
-  border-bottom: 2px solid var(--border);
-  margin-bottom: 1.5rem;
-}
+.vd-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 1.5rem; }
 
 .vd-tab {
   background: none;
@@ -504,19 +446,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 }
 .vd-tab.active { color: var(--red); border-bottom-color: var(--red); }
 
-.vd-tab-badge {
-  background: var(--red);
-  color: #fff;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 0.1rem 0.4rem;
-  border-radius: 8px;
-  min-width: 18px;
-  text-align: center;
-}
+.vd-tab-badge { background: var(--red); color: #fff; font-size: 0.68rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 8px; min-width: 18px; text-align: center; }
 .vd-tab-badge:empty { display: none; }
 
-/* Empty state */
 .vd-empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
 .vd-empty-icon { font-size: 3rem; margin-bottom: 0.75rem; }
 .vd-empty p { font-size: 1rem; font-weight: 600; color: #555; margin-bottom: 0.25rem; }
@@ -527,70 +459,109 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 /* ══════════════════════════════════════════
    JOB CARDS
 ══════════════════════════════════════════ */
-.job-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 1rem;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  transition: box-shadow 0.2s;
-}
+.job-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 1rem; overflow: hidden; box-shadow: var(--shadow); transition: box-shadow 0.2s; }
 .job-card:hover { box-shadow: var(--shadow-lg); }
 
-.job-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem 0.75rem;
-  border-bottom: 1px solid var(--border);
-}
+.job-card-top { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem 0.75rem; border-bottom: 1px solid var(--border); }
 
 .job-service { display: flex; align-items: center; gap: 0.75rem; }
 .job-emoji   { font-size: 1.75rem; line-height: 1; }
 .job-service-name { font-weight: 700; font-size: 1rem; color: var(--black); }
-.job-ref      { font-size: 0.75rem; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; }
+.job-ref { font-size: 0.75rem; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; }
 
-/* Status badges (shared with customer app) */
-.bk-status {
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.28rem 0.65rem;
-  border-radius: 20px;
-  white-space: nowrap;
-}
+.bk-status { font-size: 0.75rem; font-weight: 700; padding: 0.28rem 0.65rem; border-radius: 20px; white-space: nowrap; }
 .status-scheduled  { background: #eff6ff; color: #1d4ed8; }
 .status-inprogress { background: #fffbeb; color: #b45309; }
 .status-completed  { background: #f0fdf4; color: #15803d; }
 
 .job-card-body { padding: 0.9rem 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
-
 .job-row { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.875rem; color: var(--text); }
 .job-row-icon { font-size: 0.9rem; width: 1.2rem; flex-shrink: 0; margin-top: 0.05rem; }
 
-.job-card-footer {
-  padding: 0.85rem 1.25rem;
-  border-top: 1px solid var(--border);
-  background: #fafafa;
-}
+.job-card-footer { padding: 0.85rem 1.25rem; border-top: 1px solid var(--border); background: #fafafa; }
 
-/* Action buttons */
-.job-action-btn {
-  border: none;
-  padding: 0.55rem 1.25rem;
-  border-radius: 7px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
-}
+.job-action-btn { border: none; padding: 0.55rem 1.25rem; border-radius: 7px; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
 .job-action-btn:hover   { opacity: 0.85; }
 .job-action-btn:active  { transform: scale(0.97); }
 .job-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
 .job-action-btn.accept   { background: var(--black); color: #fff; }
-.job-action-btn.start    { background: #1d4ed8;       color: #fff; }
-.job-action-btn.complete { background: #15803d;       color: #fff; }
+.job-action-btn.start    { background: #1d4ed8; color: #fff; }
+.job-action-btn.complete { background: #15803d; color: #fff; }
+
+/* ══════════════════════════════════════════
+   PROFILE PAGE
+══════════════════════════════════════════ */
+.profile-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.profile-hero {
+  background: var(--black);
+  padding: 2.5rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.profile-avatar {
+  width: 80px; height: 80px;
+  background: var(--red);
+  color: #fff;
+  font-size: 1.75rem;
+  font-weight: 800;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  border: 3px solid rgba(255,255,255,0.15);
+}
+
+.profile-hero-info { display: flex; flex-direction: column; gap: 0.5rem; }
+.profile-name  { color: #fff; font-size: 1.5rem; font-weight: 800; }
+.profile-trade-tag { color: #ccc; font-size: 0.95rem; }
+.profile-badges { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+.vendor-badge {
+  display: inline-block;
+  background: var(--red);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+}
+
+.profile-status-badge { font-size: 0.82rem; font-weight: 600; color: #4ade80; }
+
+.profile-details { padding: 1.75rem 2rem; border-bottom: 1px solid var(--border); }
+.profile-edit-section { padding: 1.75rem 2rem 2rem; }
+
+.profile-section-title { font-size: 1rem; font-weight: 700; color: var(--black); margin-bottom: 1.25rem; }
+
+.profile-row { display: flex; align-items: center; gap: 1rem; padding: 0.65rem 0; border-bottom: 1px solid var(--border); }
+.profile-row:last-child { border-bottom: none; }
+.profile-row-label { font-size: 0.82rem; font-weight: 600; color: var(--muted); min-width: 140px; flex-shrink: 0; }
+.profile-row-value { font-size: 0.9rem; color: var(--text); }
+
+.edit-actions { margin-top: 1rem; }
+
+.edit-success-msg {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #15803d;
+  border-radius: 6px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
 
 /* ══════════════════════════════════════════
    RESPONSIVE
@@ -599,28 +570,31 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   .v-header { padding: 0 1rem; }
   .v-hero   { padding: 3rem 1.25rem; gap: 2rem; }
   .v-hero-card { width: 100%; max-width: 340px; }
-
   .vd-stats { grid-template-columns: repeat(2, 1fr); }
-
   .form-row { grid-template-columns: 1fr; }
-
   .vd-container { padding: 1.25rem 1rem 3rem; }
-
   .v-land-section { padding: 3rem 1.25rem; }
-  .v-land-cta     { padding: 3rem 1.25rem; }
+  .v-land-cta { padding: 3rem 1.25rem; }
+}
+
+@media (max-width: 600px) {
+  .auth-card { padding: 2rem 1.25rem; }
+  .profile-hero { padding: 1.75rem 1.25rem; gap: 1.25rem; }
+  .profile-details, .profile-edit-section { padding: 1.25rem; }
+  .profile-row { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+  .profile-row-label { min-width: unset; }
+  .v-nav-btn { padding: 0.4rem 0.6rem; font-size: 0.82rem; }
 }
 
 @media (max-width: 480px) {
-  .v-hero-cta    { flex-direction: column; }
+  .v-hero-cta { flex-direction: column; }
   .btn-vsignup-lg, .btn-vlogin-lg { width: 100%; text-align: center; }
   .vd-stats { grid-template-columns: repeat(2, 1fr); }
   .v-benefits, .v-trades { grid-template-columns: 1fr; }
   .vd-tab { padding: 0.6rem 0.85rem; font-size: 0.85rem; }
 }
 
-/* ══════════════════════════════════════════
-   SPINNER
-══════════════════════════════════════════ */
+/* ── Spinner ── */
 .vd-spinner {
   display: inline-block;
   width: 16px; height: 16px;
@@ -631,12 +605,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   vertical-align: middle;
   margin-right: 0.4rem;
 }
-
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ══════════════════════════════════════════
-   TOAST NOTIFICATION
-══════════════════════════════════════════ */
+/* ── Toast notification ── */
 .vd-toast {
   position: fixed;
   bottom: 2rem;
@@ -655,11 +626,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   transition: transform 0.3s ease, opacity 0.3s ease;
   pointer-events: none;
 }
-
-.vd-toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
+.vd-toast.show    { opacity: 1; transform: translateX(-50%) translateY(0); }
 .vd-toast.success { background: #15803d; }
 .vd-toast.error   { background: #b91c1c; }
