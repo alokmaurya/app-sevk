@@ -618,6 +618,218 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   .vd-tab { padding: 0.6rem 0.85rem; font-size: 0.85rem; }
 }
 
+/* ══════════════════════════════════════════
+   HEADER NAV (logged-in)
+══════════════════════════════════════════ */
+.v-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-right: 0.5rem;
+}
+
+.v-nav-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.65);
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.v-nav-btn:hover  { color: #fff; background: rgba(255,255,255,0.08); }
+.v-nav-btn.active { color: #fff; background: rgba(255,255,255,0.13); }
+
+/* ══════════════════════════════════════════
+   AUTH PAGES (login / register)
+══════════════════════════════════════════ */
+.auth-page {
+  min-height: calc(100vh - 60px);
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.auth-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.4);
+}
+.auth-card.wide { max-width: 520px; }
+
+.auth-logo { text-align: center; margin-bottom: 1.5rem; }
+
+.auth-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #111;
+  text-align: center;
+  margin-bottom: 0.35rem;
+}
+
+.auth-sub {
+  color: var(--muted);
+  font-size: 0.88rem;
+  text-align: center;
+  margin-bottom: 1.75rem;
+  line-height: 1.5;
+}
+
+.auth-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin: 0.5rem 0 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.auth-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 6px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+  display: none;
+}
+.auth-error:not(:empty) { display: block; }
+
+.auth-switch {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+.auth-switch a { color: var(--red); font-weight: 600; text-decoration: none; }
+
+.auth-back { text-align: center; margin-top: 0.5rem; font-size: 0.82rem; }
+.auth-back a { color: var(--muted); text-decoration: none; }
+.auth-back a:hover { color: var(--text); }
+
+.auth-success { text-align: center; padding: 1rem 0; }
+.auth-success-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+
+/* ══════════════════════════════════════════
+   PROFILE PAGE
+══════════════════════════════════════════ */
+.profile-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.profile-hero {
+  background: var(--black);
+  padding: 2.5rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.profile-avatar {
+  width: 80px; height: 80px;
+  background: var(--red);
+  color: #fff;
+  font-size: 1.75rem;
+  font-weight: 800;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  border: 3px solid rgba(255,255,255,0.15);
+}
+
+.profile-hero-info { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.profile-name  { color: #fff; font-size: 1.5rem; font-weight: 800; }
+.profile-trade-tag { color: #ccc; font-size: 0.95rem; }
+
+.profile-badges { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+.vendor-badge {
+  display: inline-block;
+  background: var(--red);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+}
+
+.profile-status-badge { font-size: 0.82rem; font-weight: 600; color: #4ade80; }
+
+.profile-details {
+  padding: 1.75rem 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-edit-section { padding: 1.75rem 2rem 2rem; }
+
+.profile-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 1.25rem;
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.profile-row:last-child { border-bottom: none; }
+
+.profile-row-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.profile-row-value { font-size: 0.9rem; color: var(--text); }
+
+.edit-actions { margin-top: 1rem; }
+
+.edit-success-msg {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #15803d;
+  border-radius: 6px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 600px) {
+  .auth-card { padding: 2rem 1.25rem; }
+  .profile-hero { padding: 1.75rem 1.25rem; gap: 1.25rem; }
+  .profile-details,
+  .profile-edit-section { padding: 1.25rem; }
+  .profile-row { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+  .profile-row-label { min-width: unset; }
+  .v-nav-btn { padding: 0.4rem 0.6rem; font-size: 0.82rem; }
+}
+
 /* ── Spinner ── */
 .vd-spinner {
   display: inline-block;

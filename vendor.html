@@ -21,12 +21,17 @@
     </div>
   </a>
   <div class="header-right">
-    <!-- Guest -->
+    <!-- Nav for logged-in vendors -->
+    <nav class="v-nav" id="v-nav" style="display:none">
+      <button class="v-nav-btn" id="nav-btn-dashboard" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="v-nav-btn" id="nav-btn-profile"   onclick="showPage('profile')">My Profile</button>
+    </nav>
+    <!-- Guest buttons -->
     <div id="v-guest-btns">
-      <button class="btn-vlogin"  onclick="openModal('login')">Log In</button>
-      <button class="btn-vsignup" onclick="openModal('register')">Join as Vendor</button>
+      <button class="btn-vlogin"  onclick="showPage('login')">Log In</button>
+      <button class="btn-vsignup" onclick="showPage('register')">Join as Vendor</button>
     </div>
-    <!-- Logged-in vendor -->
+    <!-- Logged-in user menu -->
     <div class="v-user-menu" id="v-user-menu" style="display:none">
       <div class="v-avatar" id="v-avatar"></div>
       <span class="v-username" id="v-username"></span>
@@ -37,108 +42,18 @@
 </header>
 
 <!-- ══════════════════════════════════════════
-     AUTH MODAL
+     PAGE: LANDING
 ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="auth-modal" onclick="closeModalOnOverlay(event)">
-  <div class="v-modal">
-    <button class="modal-close" onclick="closeModal()">&times;</button>
+<div id="page-landing">
 
-    <div class="modal-tabs">
-      <button class="modal-tab active" id="tab-login"    onclick="switchTab('login')">Log In</button>
-      <button class="modal-tab"        id="tab-register" onclick="switchTab('register')">Register</button>
-    </div>
-
-    <!-- Login -->
-    <div id="modal-login">
-      <h2 class="modal-title">Vendor Login</h2>
-      <p class="modal-sub">Access your job dashboard.</p>
-      <div class="form-group" id="li-fg-email">
-        <label for="li-email">Email Address</label>
-        <input type="email" id="li-email" placeholder="you@example.com" />
-        <span class="field-error">Please enter a valid email.</span>
-      </div>
-      <div class="form-group" id="li-fg-pass">
-        <label for="li-pass">Password</label>
-        <input type="password" id="li-pass" placeholder="••••••••" />
-        <span class="field-error">Please enter your password.</span>
-      </div>
-      <div class="modal-error" id="li-error"></div>
-      <button class="btn btn-primary modal-submit" id="li-btn" onclick="vLogin()">Log In</button>
-      <p class="modal-switch">Not registered? <a href="javascript:void(0)" onclick="switchTab('register')">Join as Vendor</a></p>
-    </div>
-
-    <!-- Register -->
-    <div id="modal-register" style="display:none">
-      <div id="reg-form-body">
-        <h2 class="modal-title">Join as a Vendor</h2>
-        <p class="modal-sub">Register to start receiving job bookings.</p>
-        <div class="form-row">
-          <div class="form-group" id="rg-fg-fname">
-            <label for="rg-fname">First Name</label>
-            <input type="text" id="rg-fname" placeholder="John" />
-            <span class="field-error">Required.</span>
-          </div>
-          <div class="form-group" id="rg-fg-lname">
-            <label for="rg-lname">Last Name</label>
-            <input type="text" id="rg-lname" placeholder="Smith" />
-            <span class="field-error">Required.</span>
-          </div>
-        </div>
-        <div class="form-group" id="rg-fg-phone">
-          <label for="rg-phone">Phone Number</label>
-          <input type="tel" id="rg-phone" placeholder="07700 900123" />
-          <span class="field-error">Please enter a valid phone number.</span>
-        </div>
-        <div class="form-group" id="rg-fg-service">
-          <label for="rg-service">Your Trade / Service</label>
-          <select id="rg-service">
-            <option value="">— Select your service —</option>
-            <option value="electrician" data-emoji="⚡" data-name="Electrician">⚡ Electrician</option>
-            <option value="plumber"     data-emoji="🔧" data-name="Plumber">🔧 Plumber</option>
-            <option value="wall"        data-emoji="🧱" data-name="Wall Specialists">🧱 Wall Specialists</option>
-            <option value="glass"       data-emoji="🪟" data-name="Glass Works">🪟 Glass Works</option>
-          </select>
-          <span class="field-error">Please select your trade.</span>
-        </div>
-        <div class="form-group" id="rg-fg-email">
-          <label for="rg-email">Email Address</label>
-          <input type="email" id="rg-email" placeholder="you@example.com" />
-          <span class="field-error">Please enter a valid email.</span>
-        </div>
-        <div class="form-group" id="rg-fg-pass">
-          <label for="rg-pass">Password</label>
-          <input type="password" id="rg-pass" placeholder="Min. 8 characters" />
-          <span class="field-error">Password must be at least 8 characters.</span>
-        </div>
-        <div class="modal-error" id="rg-error"></div>
-        <button class="btn btn-primary modal-submit" id="rg-btn" onclick="vRegister()">Create Vendor Account</button>
-        <p class="modal-switch">Already registered? <a href="javascript:void(0)" onclick="switchTab('login')">Log In</a></p>
-      </div>
-      <!-- Email confirmation state -->
-      <div id="reg-success" style="display:none" class="modal-success">
-        <div class="modal-success-icon">📧</div>
-        <h2 class="modal-title">Check your email!</h2>
-        <p class="modal-sub">A confirmation link has been sent to <strong id="reg-success-email"></strong>.<br>Click the link to activate your account then log in.</p>
-        <button class="btn btn-primary modal-submit" onclick="switchTab('login'); document.getElementById('reg-success').style.display='none'; document.getElementById('reg-form-body').style.display=''">Go to Log In</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     LANDING (guests)
-══════════════════════════════════════════ -->
-<div id="vendor-landing">
-
-  <!-- Hero -->
   <section class="v-hero">
     <div class="v-hero-content">
       <div class="v-hero-badge">🔧 For Tradespeople &amp; Specialists</div>
       <h1 class="v-hero-title">Get More Jobs.<br>Work on Your Terms.</h1>
       <p class="v-hero-sub">Join the Sevk vendor network and receive bookings directly from local customers — 24 hours a day, 7 days a week.</p>
       <div class="v-hero-cta">
-        <button class="btn-vsignup-lg" onclick="openModal('register')">Register as a Vendor</button>
-        <button class="btn-vlogin-lg"  onclick="openModal('login')">Vendor Log In</button>
+        <button class="btn-vsignup-lg" onclick="showPage('register')">Register as a Vendor</button>
+        <button class="btn-vlogin-lg"  onclick="showPage('login')">Vendor Log In</button>
       </div>
     </div>
     <div class="v-hero-visual">
@@ -155,7 +70,6 @@
     </div>
   </section>
 
-  <!-- Benefits -->
   <section class="v-land-section">
     <div class="v-land-container">
       <h2 class="v-section-title">Why Join Sevk?</h2>
@@ -185,7 +99,6 @@
     </div>
   </section>
 
-  <!-- Trades -->
   <section class="v-land-section v-land-dark">
     <div class="v-land-container">
       <h2 class="v-section-title" style="color:#fff">We're Looking For</h2>
@@ -199,12 +112,11 @@
     </div>
   </section>
 
-  <!-- CTA -->
   <section class="v-land-cta">
     <div class="v-land-container" style="text-align:center">
       <h2>Ready to start?</h2>
       <p>Join hundreds of tradespeople already using Sevk.</p>
-      <button class="btn-vsignup-lg" onclick="openModal('register')">Register Now — It's Free</button>
+      <button class="btn-vsignup-lg" onclick="showPage('register')">Register Now — It's Free</button>
     </div>
   </section>
 
@@ -222,24 +134,131 @@
     </div>
   </footer>
 
-</div><!-- /vendor-landing -->
+</div><!-- /page-landing -->
 
 <!-- ══════════════════════════════════════════
-     VENDOR DASHBOARD (logged in)
+     PAGE: LOGIN
 ══════════════════════════════════════════ -->
-<div id="vendor-dashboard" style="display:none">
+<div id="page-login" style="display:none">
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="logo-icon" style="width:46px;height:46px;font-size:1.35rem;margin:0 auto">S</div>
+      </div>
+      <h2 class="auth-title">Vendor Login</h2>
+      <p class="auth-sub">Access your job dashboard.</p>
+
+      <div class="form-group" id="li-fg-email">
+        <label for="li-email">Email Address</label>
+        <input type="email" id="li-email" placeholder="you@example.com" />
+        <span class="field-error">Please enter a valid email.</span>
+      </div>
+      <div class="form-group" id="li-fg-pass">
+        <label for="li-pass">Password</label>
+        <input type="password" id="li-pass" placeholder="••••••••" />
+        <span class="field-error">Please enter your password.</span>
+      </div>
+
+      <div class="auth-error" id="li-error"></div>
+      <button class="btn btn-primary" id="li-btn" onclick="vLogin()">Log In</button>
+      <p class="auth-switch">Not registered? <a href="javascript:void(0)" onclick="showPage('register')">Join as Vendor</a></p>
+      <p class="auth-back"><a href="javascript:void(0)" onclick="showPage('landing')">← Back to home</a></p>
+    </div>
+  </div>
+</div><!-- /page-login -->
+
+<!-- ══════════════════════════════════════════
+     PAGE: REGISTER
+══════════════════════════════════════════ -->
+<div id="page-register" style="display:none">
+  <div class="auth-page">
+    <div class="auth-card wide">
+
+      <div id="reg-form-body">
+        <div class="auth-logo">
+          <div class="logo-icon" style="width:46px;height:46px;font-size:1.35rem;margin:0 auto">S</div>
+        </div>
+        <h2 class="auth-title">Join as a Vendor</h2>
+        <p class="auth-sub" id="rg-sub">Register to start receiving job bookings.</p>
+
+        <div class="auth-section-label">Personal Details</div>
+        <div class="form-row">
+          <div class="form-group" id="rg-fg-fname">
+            <label for="rg-fname">First Name</label>
+            <input type="text" id="rg-fname" placeholder="John" />
+            <span class="field-error">Required.</span>
+          </div>
+          <div class="form-group" id="rg-fg-lname">
+            <label for="rg-lname">Last Name</label>
+            <input type="text" id="rg-lname" placeholder="Smith" />
+            <span class="field-error">Required.</span>
+          </div>
+        </div>
+        <div class="form-group" id="rg-fg-phone">
+          <label for="rg-phone">Phone Number</label>
+          <input type="tel" id="rg-phone" placeholder="07700 900123" />
+          <span class="field-error">Please enter a valid phone number.</span>
+        </div>
+
+        <div class="auth-section-label">Your Trade</div>
+        <div class="form-group" id="rg-fg-service">
+          <label for="rg-service">Trade / Service</label>
+          <select id="rg-service">
+            <option value="">— Select your service —</option>
+            <option value="electrician" data-emoji="⚡" data-name="Electrician">⚡ Electrician</option>
+            <option value="plumber"     data-emoji="🔧" data-name="Plumber">🔧 Plumber</option>
+            <option value="wall"        data-emoji="🧱" data-name="Wall Specialists">🧱 Wall Specialists</option>
+            <option value="glass"       data-emoji="🪟" data-name="Glass Works">🪟 Glass Works</option>
+          </select>
+          <span class="field-error">Please select your trade.</span>
+        </div>
+
+        <div id="rg-creds-section">
+          <div class="auth-section-label">Account Credentials</div>
+          <div class="form-group" id="rg-fg-email">
+            <label for="rg-email">Email Address</label>
+            <input type="email" id="rg-email" placeholder="you@example.com" />
+            <span class="field-error">Please enter a valid email.</span>
+          </div>
+          <div class="form-group" id="rg-fg-pass">
+            <label for="rg-pass">Password</label>
+            <input type="password" id="rg-pass" placeholder="Min. 8 characters" />
+            <span class="field-error">Password must be at least 8 characters.</span>
+          </div>
+        </div>
+
+        <div class="auth-error" id="rg-error"></div>
+        <button class="btn btn-primary" id="rg-btn" onclick="vRegister()">Create Vendor Account</button>
+        <p class="auth-switch">Already registered? <a href="javascript:void(0)" onclick="showPage('login')">Log In</a></p>
+        <p class="auth-back" id="rg-back-link"><a href="javascript:void(0)" onclick="showPage('landing')">← Back to home</a></p>
+      </div>
+
+      <!-- Email confirmation state -->
+      <div id="reg-success" style="display:none" class="auth-success">
+        <div class="auth-success-icon">📧</div>
+        <h2 class="auth-title">Check your email!</h2>
+        <p class="auth-sub">A confirmation link has been sent to <strong id="reg-success-email"></strong>.<br>Click the link to activate your account then log in.</p>
+        <button class="btn btn-primary" onclick="goToLogin()">Go to Log In</button>
+      </div>
+
+    </div>
+  </div>
+</div><!-- /page-register -->
+
+<!-- ══════════════════════════════════════════
+     PAGE: DASHBOARD
+══════════════════════════════════════════ -->
+<div id="page-dashboard" style="display:none">
   <div class="vd-container">
 
-    <!-- Dashboard header -->
     <div class="vd-header">
       <div>
         <h1 class="vd-title">Job Dashboard</h1>
         <p class="vd-sub">Welcome back, <span id="vd-name"></span> · <span id="vd-service"></span></p>
       </div>
-      <button class="btn-refresh" id="btn-refresh" onclick="manualRefresh()" title="Refresh jobs">↻ Refresh</button>
+      <button class="btn-refresh" id="btn-refresh" onclick="manualRefresh()">↻ Refresh</button>
     </div>
 
-    <!-- Stats -->
     <div class="vd-stats">
       <div class="vd-stat-card" onclick="switchDashTab('available')" style="cursor:pointer">
         <div class="vd-stat-icon">📋</div>
@@ -263,51 +282,108 @@
       </div>
     </div>
 
-    <!-- Tab bar -->
     <div class="vd-tabs">
-      <button class="vd-tab active" id="vt-myjobs" onclick="switchDashTab('myjobs')">
+      <button class="vd-tab active" id="vt-myjobs"    onclick="switchDashTab('myjobs')">
         My Jobs <span class="vd-tab-badge" id="badge-myjobs"></span>
       </button>
-      <button class="vd-tab" id="vt-available" onclick="switchDashTab('available')">
+      <button class="vd-tab"        id="vt-available" onclick="switchDashTab('available')">
         Available Jobs <span class="vd-tab-badge" id="badge-available"></span>
       </button>
     </div>
 
-    <!-- My Jobs (default tab) -->
     <div id="vd-myjobs">
       <div id="myjobs-list"><div class="vd-loading"><span class="vd-spinner"></span> Loading your jobs…</div></div>
     </div>
-
-    <!-- Available Jobs -->
     <div id="vd-available" style="display:none">
       <div id="available-list"><div class="vd-loading"><span class="vd-spinner"></span> Loading available jobs…</div></div>
     </div>
 
-    <!-- Complete profile (shown when auth exists but no vendor profile) -->
-    <div id="vd-complete-profile" style="display:none">
-      <div class="vd-empty" style="padding:4rem 1rem">
-        <div class="vd-empty-icon">👤</div>
-        <p>Complete Your Vendor Profile</p>
-        <p class="vd-empty-sub">Your account is set up but your vendor profile is missing.<br>Fill in your trade details below to start receiving jobs.</p>
-        <button class="job-action-btn accept" style="margin-top:1.5rem" onclick="openCompleteProfile()">Complete Registration →</button>
-      </div>
-    </div>
-
   </div>
-
-  <!-- Toast notification -->
   <div id="vd-toast" class="vd-toast"></div>
-</div><!-- /vendor-dashboard -->
+</div><!-- /page-dashboard -->
+
+<!-- ══════════════════════════════════════════
+     PAGE: PROFILE
+══════════════════════════════════════════ -->
+<div id="page-profile" style="display:none">
+  <div class="vd-container">
+
+    <div class="profile-card">
+
+      <div class="profile-hero">
+        <div class="profile-avatar" id="prof-avatar"></div>
+        <div class="profile-hero-info">
+          <h2 class="profile-name" id="prof-name"></h2>
+          <div class="profile-trade-tag" id="prof-trade"></div>
+          <div class="profile-badges">
+            <span class="vendor-badge">Vendor</span>
+            <span class="profile-status-badge" id="prof-status-badge">● Active</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-details">
+        <h3 class="profile-section-title">Account Details</h3>
+        <div class="profile-row">
+          <span class="profile-row-label">Account Type</span>
+          <span class="profile-row-value"><span class="vendor-badge">Vendor</span></span>
+        </div>
+        <div class="profile-row">
+          <span class="profile-row-label">Trade</span>
+          <span class="profile-row-value" id="prof-trade-detail"></span>
+        </div>
+        <div class="profile-row">
+          <span class="profile-row-label">Email</span>
+          <span class="profile-row-value" id="prof-email"></span>
+        </div>
+        <div class="profile-row">
+          <span class="profile-row-label">Phone</span>
+          <span class="profile-row-value" id="prof-phone"></span>
+        </div>
+        <div class="profile-row">
+          <span class="profile-row-label">Member Since</span>
+          <span class="profile-row-value" id="prof-since"></span>
+        </div>
+      </div>
+
+      <div class="profile-edit-section">
+        <h3 class="profile-section-title">Edit Profile</h3>
+        <div class="form-row">
+          <div class="form-group" id="ed-fg-fname">
+            <label for="ed-fname">First Name</label>
+            <input type="text" id="ed-fname" placeholder="John" />
+            <span class="field-error">Required.</span>
+          </div>
+          <div class="form-group" id="ed-fg-lname">
+            <label for="ed-lname">Last Name</label>
+            <input type="text" id="ed-lname" placeholder="Smith" />
+            <span class="field-error">Required.</span>
+          </div>
+        </div>
+        <div class="form-group" id="ed-fg-phone">
+          <label for="ed-phone">Phone Number</label>
+          <input type="tel" id="ed-phone" placeholder="07700 900123" />
+          <span class="field-error">Please enter a valid phone number.</span>
+        </div>
+        <div class="auth-error" id="ed-error"></div>
+        <div class="edit-success-msg" id="ed-success" style="display:none">Profile updated successfully!</div>
+        <div class="edit-actions">
+          <button class="btn btn-primary" id="ed-btn" onclick="saveProfile()" style="max-width:200px">Save Changes</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div><!-- /page-profile -->
 
 <script>
   /* ══════════════════════════════════════════
-     CONFIG — same project as customer app
+     CONFIG
   ══════════════════════════════════════════ */
   const SUPABASE_URL      = 'https://pkhpkmpscznqkgasxwdm.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBraHBrbXBzY3pucWtnYXN4d2RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDgzODAsImV4cCI6MjA5Mzk4NDM4MH0.y6hpeO_joE9AcdmfYEofsDSwqvGsCVRPbSUo3VtsbgY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  /* Reject a promise after ms milliseconds with a clear error */
   function withTimeout(promise, ms = 30000) {
     return Promise.race([
       promise,
@@ -320,16 +396,11 @@
     ]);
   }
 
-  /* Quick connectivity check before auth calls */
   async function checkConnectivity() {
     try {
       const res = await Promise.race([
-        fetch(`${SUPABASE_URL}/auth/v1/settings`, {
-          headers: { apikey: SUPABASE_ANON_KEY },
-        }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), 6000)
-        ),
+        fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_ANON_KEY } }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000)),
       ]);
       return res.ok || res.status === 400;
     } catch {
@@ -345,10 +416,27 @@
   let refreshTimer  = null;
 
   const STATUS_META = {
-    'Scheduled':   { cls: 'status-scheduled',   label: 'Scheduled'   },
-    'In Progress': { cls: 'status-inprogress',  label: 'In Progress' },
-    'Completed':   { cls: 'status-completed',   label: 'Completed'   },
+    'Scheduled':   { cls: 'status-scheduled',  label: 'Scheduled'   },
+    'In Progress': { cls: 'status-inprogress', label: 'In Progress' },
+    'Completed':   { cls: 'status-completed',  label: 'Completed'   },
   };
+
+  /* ══════════════════════════════════════════
+     PAGE ROUTING
+  ══════════════════════════════════════════ */
+  function showPage(name) {
+    ['landing', 'login', 'register', 'dashboard', 'profile'].forEach(p => {
+      const el = document.getElementById('page-' + p);
+      if (el) el.style.display = p === name ? '' : 'none';
+    });
+    ['dashboard', 'profile'].forEach(p => {
+      const btn = document.getElementById('nav-btn-' + p);
+      if (btn) btn.classList.toggle('active', p === name);
+    });
+    if (name === 'profile'   && vendorProfile) loadProfilePage();
+    if (name === 'dashboard' && vendorProfile) { switchDashTab('myjobs'); loadDashboard(); }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   /* ══════════════════════════════════════════
      AUTH
@@ -359,6 +447,7 @@
       await fetchVendorProfile();
     } else {
       vendorProfile = null;
+      stopAutoRefresh();
     }
     applyAuthState();
   });
@@ -375,12 +464,11 @@
   function applyAuthState() {
     const loggedIn = !!currentUser && !!vendorProfile;
     const authOnly = !!currentUser && !vendorProfile;
+    const guest    = !currentUser;
 
-    /* Landing only for guests; dashboard for everyone logged in */
-    document.getElementById('vendor-landing').style.display   = currentUser ? 'none' : '';
-    document.getElementById('vendor-dashboard').style.display = currentUser ? ''     : 'none';
-    document.getElementById('v-guest-btns').style.display     = currentUser ? 'none' : '';
-    document.getElementById('v-user-menu').style.display      = currentUser ? ''     : 'none';
+    document.getElementById('v-guest-btns').style.display = guest    ? '' : 'none';
+    document.getElementById('v-user-menu').style.display  = guest    ? 'none' : '';
+    document.getElementById('v-nav').style.display        = loggedIn ? '' : 'none';
 
     if (loggedIn) {
       const initials = vendorProfile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -389,79 +477,37 @@
       document.getElementById('v-service-tag').textContent = vendorProfile.service_emoji + ' ' + vendorProfile.service_name;
       document.getElementById('vd-name').textContent       = vendorProfile.name.split(' ')[0];
       document.getElementById('vd-service').textContent    = vendorProfile.service_emoji + ' ' + vendorProfile.service_name;
-      /* show job sections, hide complete-profile */
-      document.getElementById('vd-stats').style.display            = '';
-      document.getElementById('vd-tabs').style.display             = '';
-      document.getElementById('vd-myjobs').style.display           = '';
-      document.getElementById('btn-refresh').style.display         = '';
-      document.getElementById('vd-complete-profile').style.display = 'none';
-      /* show email/pass fields for fresh registrations */
-      document.getElementById('rg-fg-email').style.display = '';
-      document.getElementById('rg-fg-pass').style.display  = '';
-      switchDashTab('myjobs');
-      loadDashboard();
+      showPage('dashboard');
       startAutoRefresh();
-    }
-
-    if (authOnly) {
-      document.getElementById('v-avatar').textContent      = '?';
+    } else if (authOnly) {
+      document.getElementById('v-avatar').textContent      = currentUser.email[0].toUpperCase();
       document.getElementById('v-username').textContent    = currentUser.email.split('@')[0];
       document.getElementById('v-service-tag').textContent = '';
-      document.getElementById('vd-name').textContent       = currentUser.email.split('@')[0];
-      document.getElementById('vd-service').textContent    = 'profile incomplete';
-      /* hide job sections, show complete-profile */
-      document.getElementById('vd-stats').style.display            = 'none';
-      document.getElementById('vd-tabs').style.display             = 'none';
-      document.getElementById('vd-myjobs').style.display           = 'none';
-      document.getElementById('vd-available').style.display        = 'none';
-      document.getElementById('btn-refresh').style.display         = 'none';
-      document.getElementById('vd-complete-profile').style.display = '';
-      /* hide email/pass fields — user already has an auth account */
-      document.getElementById('rg-fg-email').style.display = 'none';
-      document.getElementById('rg-fg-pass').style.display  = 'none';
+      /* Redirect to register page but hide credentials — user already has auth account */
+      document.getElementById('rg-creds-section').style.display = 'none';
+      document.getElementById('rg-sub').textContent = 'Your account is verified. Fill in your trade details below.';
+      document.getElementById('rg-back-link').style.display = 'none';
+      showPage('register');
+    } else {
+      /* Guest — only navigate to landing if not already on an auth page */
+      const onAuthPage = ['login', 'register'].some(p => {
+        const el = document.getElementById('page-' + p);
+        return el && el.style.display !== 'none';
+      });
+      if (!onAuthPage) showPage('landing');
     }
-  }
-
-  function openCompleteProfile() {
-    document.getElementById('rg-error').textContent =
-      'Your account is verified. Fill in your trade details to continue.';
-    openModal('register');
   }
 
   async function vLogout() {
     stopAutoRefresh();
     await sb.auth.signOut();
     vendorProfile = null;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showPage('landing');
   }
 
-  /* ── Toast & auto-refresh ── */
-  function showToast(msg, type = 'success') {
-    const t = document.getElementById('vd-toast');
-    if (!t) return;
-    t.textContent = msg;
-    t.className = 'vd-toast show ' + type;
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 3500);
-  }
-
-  function startAutoRefresh() {
-    stopAutoRefresh();
-    refreshTimer = setInterval(() => { if (vendorProfile) loadDashboard(true); }, 60000);
-  }
-
-  function stopAutoRefresh() {
-    if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
-  }
-
-  async function manualRefresh() {
-    const btn = document.getElementById('btn-refresh');
-    btn.textContent = '↻ Refreshing…'; btn.disabled = true;
-    await loadDashboard();
-    btn.textContent = '↻ Refresh'; btn.disabled = false;
-  }
-
-  /* ── Login ── */
+  /* ══════════════════════════════════════════
+     LOGIN
+  ══════════════════════════════════════════ */
   async function vLogin() {
     let ok = true;
     function chk(gId, iId, test) {
@@ -492,7 +538,6 @@
         email:    document.getElementById('li-email').value.trim(),
         password: document.getElementById('li-pass').value,
       }));
-
       if (error) {
         document.getElementById('li-error').textContent =
           error.message === 'Invalid login credentials'
@@ -500,7 +545,7 @@
             : error.message;
         return;
       }
-      closeModal();
+      /* Navigation handled by onAuthStateChange → applyAuthState */
     } catch (e) {
       document.getElementById('li-error').textContent =
         e.message || 'Connection error. Check your internet and try again.';
@@ -509,7 +554,9 @@
     }
   }
 
-  /* ── Register ── */
+  /* ══════════════════════════════════════════
+     REGISTER
+  ══════════════════════════════════════════ */
   async function vRegister() {
     let ok = true;
     function chk(gId, iId, test) {
@@ -521,7 +568,8 @@
     chk('rg-fg-lname',   'rg-lname',   v => v.length >= 1);
     chk('rg-fg-phone',   'rg-phone',   v => /^[\d\s\+\-\(\)]{7,}$/.test(v));
     chk('rg-fg-service', 'rg-service', v => v.length > 0);
-    if (!currentUser) {
+    const needsCreds = document.getElementById('rg-creds-section').style.display !== 'none';
+    if (needsCreds) {
       chk('rg-fg-email', 'rg-email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
       chk('rg-fg-pass',  'rg-pass',  v => v.length >= 8);
     }
@@ -561,7 +609,7 @@
         const { data: authData, error: authError } = await withTimeout(sb.auth.signUp({
           email,
           password: document.getElementById('rg-pass').value,
-          options:  { data: { first_name: firstName, last_name: lastName } },
+          options:  { data: { user_type: 'vendor', name: fullName } },
         }));
 
         if (authError) {
@@ -601,7 +649,6 @@
       }
 
       vendorProfile = vendor;
-      closeModal();
       applyAuthState();
 
     } catch (e) {
@@ -612,40 +659,112 @@
     }
   }
 
+  function goToLogin() {
+    document.getElementById('reg-success').style.display    = 'none';
+    document.getElementById('reg-form-body').style.display  = '';
+    document.getElementById('rg-creds-section').style.display = '';
+    document.getElementById('rg-sub').textContent = 'Register to start receiving job bookings.';
+    document.getElementById('rg-back-link').style.display   = '';
+    showPage('login');
+  }
+
   /* ══════════════════════════════════════════
-     MODAL HELPERS
+     PROFILE PAGE
   ══════════════════════════════════════════ */
-  function openModal(tab) {
-    switchTab(tab);
-    document.getElementById('auth-modal').classList.add('open');
-    document.body.style.overflow = 'hidden';
+  function loadProfilePage() {
+    if (!vendorProfile) return;
+    const nameParts = vendorProfile.name.split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName  = nameParts.slice(1).join(' ') || '';
+    const initials  = ((firstName[0] || '') + (lastName[0] || '')).toUpperCase().slice(0, 2) || vendorProfile.name[0].toUpperCase();
+
+    document.getElementById('prof-avatar').textContent       = initials;
+    document.getElementById('prof-name').textContent         = vendorProfile.name;
+    document.getElementById('prof-trade').textContent        = vendorProfile.service_emoji + ' ' + vendorProfile.service_name;
+    document.getElementById('prof-trade-detail').textContent = vendorProfile.service_emoji + ' ' + vendorProfile.service_name;
+    document.getElementById('prof-email').textContent        = vendorProfile.email;
+    document.getElementById('prof-phone').textContent        = vendorProfile.phone;
+
+    const since = new Date(vendorProfile.created_at);
+    document.getElementById('prof-since').textContent =
+      since.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    document.getElementById('ed-fname').value = firstName;
+    document.getElementById('ed-lname').value = lastName;
+    document.getElementById('ed-phone').value = vendorProfile.phone;
+    document.getElementById('ed-error').textContent = '';
+    document.getElementById('ed-success').style.display = 'none';
   }
 
-  function closeModal() {
-    document.getElementById('auth-modal').classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  function closeModalOnOverlay(e) {
-    if (e.target === document.getElementById('auth-modal')) closeModal();
-  }
-
-  function switchTab(tab) {
-    document.getElementById('modal-login').style.display    = tab === 'login'    ? '' : 'none';
-    document.getElementById('modal-register').style.display = tab === 'register' ? '' : 'none';
-    document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
-    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
-    document.getElementById('li-error').textContent = '';
-    document.getElementById('rg-error').textContent = '';
-    document.querySelectorAll('#auth-modal .form-group').forEach(fg => fg.classList.remove('error'));
-  }
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModal(); return; }
-    if (e.key === 'Enter' && document.getElementById('auth-modal').classList.contains('open')) {
-      document.getElementById('modal-login').style.display !== 'none' ? vLogin() : vRegister();
+  async function saveProfile() {
+    let ok = true;
+    function chk(gId, iId, test) {
+      const val = document.getElementById(iId).value.trim();
+      document.getElementById(gId).classList.toggle('error', !test(val));
+      if (!test(val)) ok = false;
     }
-  });
+    chk('ed-fg-fname', 'ed-fname', v => v.length >= 1);
+    chk('ed-fg-lname', 'ed-lname', v => v.length >= 1);
+    chk('ed-fg-phone', 'ed-phone', v => /^[\d\s\+\-\(\)]{7,}$/.test(v));
+    if (!ok) return;
+
+    const firstName = document.getElementById('ed-fname').value.trim();
+    const lastName  = document.getElementById('ed-lname').value.trim();
+    const fullName  = (firstName + ' ' + lastName).trim();
+    const phone     = document.getElementById('ed-phone').value.trim();
+
+    const btn = document.getElementById('ed-btn');
+    btn.textContent = 'Saving…'; btn.disabled = true;
+    document.getElementById('ed-error').textContent = '';
+    document.getElementById('ed-success').style.display = 'none';
+
+    const { data, error } = await sb
+      .from('vendors')
+      .update({ name: fullName, phone })
+      .eq('id', vendorProfile.id)
+      .select()
+      .single();
+
+    if (error) {
+      document.getElementById('ed-error').textContent = error.message;
+      btn.textContent = 'Save Changes'; btn.disabled = false;
+      return;
+    }
+
+    vendorProfile = data;
+    const initials = vendorProfile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    document.getElementById('v-avatar').textContent   = initials;
+    document.getElementById('v-username').textContent = vendorProfile.name.split(' ')[0];
+    loadProfilePage();
+    document.getElementById('ed-success').style.display = '';
+    btn.textContent = 'Save Changes'; btn.disabled = false;
+  }
+
+  /* ══ Toast & auto-refresh ══ */
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('vd-toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.className = 'vd-toast show ' + type;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  function startAutoRefresh() {
+    stopAutoRefresh();
+    refreshTimer = setInterval(() => { if (vendorProfile) loadDashboard(true); }, 60000);
+  }
+
+  function stopAutoRefresh() {
+    if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+  }
+
+  async function manualRefresh() {
+    const btn = document.getElementById('btn-refresh');
+    btn.textContent = '↻ Refreshing…'; btn.disabled = true;
+    await loadDashboard();
+    btn.textContent = '↻ Refresh'; btn.disabled = false;
+  }
 
   /* ══════════════════════════════════════════
      DASHBOARD
@@ -770,7 +889,9 @@
           <div class="job-row"><span class="job-row-icon">📍</span><span>${b.address}</span></div>
           ${b.notes ? `<div class="job-row"><span class="job-row-icon">📝</span><span>${b.notes}</span></div>` : ''}
         </div>
-        ${actionBtn ? `<div class="job-card-footer">${actionBtn}</div>` : `<div class="job-card-footer"><span style="color:#888;font-size:0.78rem">Job completed</span></div>`}
+        ${actionBtn
+          ? `<div class="job-card-footer">${actionBtn}</div>`
+          : `<div class="job-card-footer"><span style="color:#888;font-size:0.78rem">Job completed</span></div>`}
       </div>`;
   }
 
@@ -834,6 +955,16 @@
     showToast('Job marked as completed!', 'success');
     await loadDashboard();
   }
+
+  /* ══ Keyboard shortcuts ══ */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const loginVisible = document.getElementById('page-login').style.display !== 'none';
+      const regVisible   = document.getElementById('page-register').style.display !== 'none';
+      if (loginVisible) vLogin();
+      else if (regVisible) vRegister();
+    }
+  });
 </script>
 
 </body>
