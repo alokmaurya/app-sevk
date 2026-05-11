@@ -320,12 +320,12 @@
   });
 
   async function fetchVendorProfile() {
-    const { data } = await sb
+    const { data, error } = await sb
       .from('vendors')
       .select('*')
       .eq('user_id', currentUser.id)
       .maybeSingle();
-    vendorProfile = data;
+    vendorProfile = error ? null : data;
   }
 
   function applyAuthState() {
@@ -354,10 +354,16 @@
       document.getElementById('v-username').textContent     = currentUser.email;
       document.getElementById('v-service-tag').textContent  = '';
       document.getElementById('v-avatar').textContent       = '?';
-      // Re-open modal so they can complete vendor profile
+      // Show register modal — hide email/pass fields since user is already authenticated
+      document.getElementById('rg-fg-email').style.display = 'none';
+      document.getElementById('rg-fg-pass').style.display  = 'none';
       openModal('register');
       document.getElementById('rg-error').textContent =
-        'Please complete your vendor profile to continue.';
+        'Account verified! Please complete your vendor profile to continue.';
+    } else {
+      // Show email/pass fields for fresh registration
+      document.getElementById('rg-fg-email').style.display = '';
+      document.getElementById('rg-fg-pass').style.display  = '';
     }
   }
 
@@ -417,17 +423,19 @@
     chk('rg-fg-lname',   'rg-lname',   v => v.length >= 1);
     chk('rg-fg-phone',   'rg-phone',   v => /^[\d\s\+\-\(\)]{7,}$/.test(v));
     chk('rg-fg-service', 'rg-service', v => v.length > 0);
-    chk('rg-fg-email',   'rg-email',   v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
-    chk('rg-fg-pass',    'rg-pass',    v => v.length >= 8);
+    /* skip email/pass validation when already authenticated (completing profile) */
+    if (!currentUser) {
+      chk('rg-fg-email', 'rg-email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+      chk('rg-fg-pass',  'rg-pass',  v => v.length >= 8);
+    }
     if (!ok) return;
 
-    const sel       = document.getElementById('rg-service');
-    const opt       = sel.options[sel.selectedIndex];
-    const firstName = document.getElementById('rg-fname').value.trim();
-    const lastName  = document.getElementById('rg-lname').value.trim();
-    const fullName  = (firstName + ' ' + lastName).trim();
-    const email     = document.getElementById('rg-email').value.trim();
-    const phone     = document.getElementById('rg-phone').value.trim();
+    const sel          = document.getElementById('rg-service');
+    const opt          = sel.options[sel.selectedIndex];
+    const firstName    = document.getElementById('rg-fname').value.trim();
+    const lastName     = document.getElementById('rg-lname').value.trim();
+    const fullName     = (firstName + ' ' + lastName).trim();
+    const phone        = document.getElementById('rg-phone').value.trim();
     const serviceId    = sel.value;
     const serviceName  = opt.dataset.name;
     const serviceEmoji = opt.dataset.emoji;
@@ -437,41 +445,65 @@
     document.getElementById('rg-error').textContent = '';
 
     try {
-      /* 1 — Create auth account */
-      const { data: authData, error: authError } = await sb.auth.signUp({
-        email,
-        password: document.getElementById('rg-pass').value,
-        options:  { data: { first_name: firstName, last_name: lastName } },
-      });
+      let userId;
 
-      if (authError) {
-        document.getElementById('rg-error').textContent = authError.message;
-        return;
+      if (currentUser) {
+        /* Already authenticated (email-confirm flow) — just create the vendor profile */
+        userId = currentUser.id;
+      } else {
+        /* New registration — create auth account first */
+        const email = document.getElementById('rg-email').value.trim();
+        const { data: authData, error: authError } = await sb.auth.signUp({
+          email,
+          password: document.getElementById('rg-pass').value,
+          options:  { data: { first_name: firstName, last_name: lastName } },
+        });
+
+        if (authError) {
+          document.getElementById('rg-error').textContent = authError.message;
+          return;
+        }
+
+        if (!authData.session) {
+          /* Email confirmation required — vendor profile created after they confirm */
+          document.getElementById('reg-form-body').style.display = 'none';
+          document.getElementById('reg-success-email').textContent = email;
+          document.getElementById('reg-success').style.display = '';
+          return;
+        }
+
+        userId = authData.user.id;
       }
 
-      /* 2 — Create vendor profile (only if session exists, i.e. email confirm OFF) */
-      if (authData.session) {
-        const { error: vendorError } = await sb.from('vendors').insert({
-          user_id:       authData.user.id,
+      /* Insert vendor profile */
+      const profileEmail = currentUser
+        ? currentUser.email
+        : document.getElementById('rg-email').value.trim();
+
+      const { data: vendor, error: vendorError } = await sb
+        .from('vendors')
+        .insert({
+          user_id:       userId,
           name:          fullName,
           phone,
-          email,
+          email:         profileEmail,
           service_id:    serviceId,
           service_name:  serviceName,
           service_emoji: serviceEmoji,
-        });
+        })
+        .select()
+        .single();
 
-        if (vendorError) {
-          document.getElementById('rg-error').textContent = vendorError.message;
-          return;
-        }
-        closeModal();
-      } else {
-        /* Email confirmation required — show success panel */
-        document.getElementById('reg-form-body').style.display = 'none';
-        document.getElementById('reg-success-email').textContent = email;
-        document.getElementById('reg-success').style.display = '';
+      if (vendorError) {
+        document.getElementById('rg-error').textContent = vendorError.message;
+        return;
       }
+
+      /* Set profile directly to avoid race with onAuthStateChange */
+      vendorProfile = vendor;
+      closeModal();
+      applyAuthState();
+
     } catch (e) {
       document.getElementById('rg-error').textContent =
         'Connection error. Check your internet and try again.';
