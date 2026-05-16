@@ -38,6 +38,8 @@ create table public.bookings (
   vendor_id      uuid        references public.vendors(id) on delete set null,
   vendor_name    text        default null,
   otp            text        default null,
+  started_at     timestamptz default null,
+  completion_otp text        default null,
   created_at     timestamptz default now()
 );
 
@@ -133,6 +135,12 @@ create policy "Vendors can update status on their jobs"
 -- Add otp to existing bookings table:
 -- alter table public.bookings
 --   add column if not exists otp text default null;
+
+-- Add started_at and completion_otp to existing bookings table:
+-- alter table public.bookings
+--   add column if not exists started_at timestamptz default null;
+-- alter table public.bookings
+--   add column if not exists completion_otp text default null;
 
 -- Add status column to existing bookings table:
 -- alter table public.bookings
