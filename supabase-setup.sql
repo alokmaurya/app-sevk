@@ -40,6 +40,7 @@ create table public.bookings (
   otp            text        default null,
   started_at     timestamptz default null,
   completion_otp text        default null,
+  completed_at   timestamptz default null,
   created_at     timestamptz default now()
 );
 
@@ -141,6 +142,10 @@ create policy "Vendors can update status on their jobs"
 --   add column if not exists started_at timestamptz default null;
 -- alter table public.bookings
 --   add column if not exists completion_otp text default null;
+
+-- Add completed_at to existing bookings table:
+-- alter table public.bookings
+--   add column if not exists completed_at timestamptz default null;
 
 -- Add status column to existing bookings table:
 -- alter table public.bookings

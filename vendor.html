@@ -824,6 +824,14 @@
     Object.keys(activeTimers).forEach(id => { clearInterval(activeTimers[id]); delete activeTimers[id]; });
   }
 
+  function formatDuration(startedAt, completedAt) {
+    const secs = Math.max(0, Math.floor((new Date(completedAt).getTime() - new Date(startedAt).getTime()) / 1000));
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
   function renderMyJobs() {
     clearAllTimers();
     const list = document.getElementById('myjobs-list');
@@ -903,6 +911,7 @@
           <div class="job-row"><span class="job-row-icon">📍</span><span>${b.address}</span></div>
           ${b.notes ? `<div class="job-row"><span class="job-row-icon">📝</span><span>${b.notes}</span></div>` : ''}
           ${status === 'In Progress' && b.started_at ? `<div class="job-timer-row"><span class="job-timer-icon">⏱</span><span>Time elapsed: <strong class="job-timer" id="timer-${b.id}">00:00:00</strong></span></div>` : ''}
+          ${status === 'Completed' && b.started_at && b.completed_at ? `<div class="job-timer-row"><span class="job-timer-icon">✅</span><span>Total time taken: <strong class="job-timer">${formatDuration(b.started_at, b.completed_at)}</strong></span></div>` : ''}
         </div>
         ${actionBtn
           ? `<div class="job-card-footer">${actionBtn}</div>`
@@ -972,7 +981,7 @@
 
     const { error } = await sb
       .from('bookings')
-      .update({ status: 'Completed' })
+      .update({ status: 'Completed', completed_at: new Date().toISOString() })
       .eq('id', bookingId)
       .eq('vendor_id', vendorProfile.id);
 
