@@ -830,6 +830,7 @@
             <div class="bk-row"><span class="bk-row-icon">📞</span><span>${b.phone}</span></div>
             <div class="bk-row"><span class="bk-row-icon">📍</span><span>${b.address}</span></div>
             ${b.notes ? `<div class="bk-row"><span class="bk-row-icon">📝</span><span>${b.notes}</span></div>` : ''}
+            ${b.vendor_name ? `<div class="bk-row"><span class="bk-row-icon">🔧</span><span>Assigned to: <strong>${b.vendor_name}</strong></span></div>` : ''}
           </div>
           <div class="bk-card-footer">Booked on ${createdStr}</div>
         </div>`;
