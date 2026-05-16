@@ -798,7 +798,34 @@
     document.getElementById('vt-available').classList.toggle('active', !isMyJobs);
   }
 
+  /* ── Live Job Timers ── */
+  const activeTimers = {};
+
+  function formatElapsed(startedAt) {
+    const secs = Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000));
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function startTimer(bookingId, startedAt) {
+    if (activeTimers[bookingId]) clearInterval(activeTimers[bookingId]);
+    const tick = () => {
+      const el = document.getElementById('timer-' + bookingId);
+      if (!el) { clearInterval(activeTimers[bookingId]); delete activeTimers[bookingId]; return; }
+      el.textContent = formatElapsed(startedAt);
+    };
+    tick();
+    activeTimers[bookingId] = setInterval(tick, 1000);
+  }
+
+  function clearAllTimers() {
+    Object.keys(activeTimers).forEach(id => { clearInterval(activeTimers[id]); delete activeTimers[id]; });
+  }
+
   function renderMyJobs() {
+    clearAllTimers();
     const list = document.getElementById('myjobs-list');
     if (!myJobs.length) {
       list.innerHTML = `
@@ -813,6 +840,7 @@
     const order = { 'In Progress': 0, 'Scheduled': 1, 'Completed': 2 };
     const sorted = [...myJobs].sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
     list.innerHTML = sorted.map(b => buildJobCard(b, 'mine')).join('');
+    myJobs.filter(b => b.status === 'In Progress' && b.started_at).forEach(b => startTimer(b.id, b.started_at));
   }
 
   function renderAvailableJobs() {
@@ -847,7 +875,13 @@
           <button class="job-action-btn start" id="start-btn-${b.id}" onclick="startJob('${b.id}')" disabled>▶ Start Job</button>
         </div>`;
     } else if (status === 'In Progress') {
-      actionBtn = `<button class="job-action-btn complete" onclick="completeJob('${b.id}')">✅ Mark Complete</button>`;
+      actionBtn = `
+        <div class="otp-verify-row">
+          <input type="text" inputmode="numeric" class="otp-input" id="comp-otp-input-${b.id}"
+            maxlength="4" placeholder="Enter completion OTP"
+            oninput="checkCompletionOtp('${b.id}', '${b.completion_otp}', this.value)">
+          <button class="job-action-btn complete" id="complete-btn-${b.id}" onclick="completeJob('${b.id}')" disabled>✅ Mark Complete</button>
+        </div>`;
     }
 
     return `
@@ -868,6 +902,7 @@
           <div class="job-row"><span class="job-row-icon">📞</span><span>${b.phone}</span></div>
           <div class="job-row"><span class="job-row-icon">📍</span><span>${b.address}</span></div>
           ${b.notes ? `<div class="job-row"><span class="job-row-icon">📝</span><span>${b.notes}</span></div>` : ''}
+          ${status === 'In Progress' && b.started_at ? `<div class="job-timer-row"><span class="job-timer-icon">⏱</span><span>Time elapsed: <strong class="job-timer" id="timer-${b.id}">00:00:00</strong></span></div>` : ''}
         </div>
         ${actionBtn
           ? `<div class="job-card-footer">${actionBtn}</div>`
@@ -902,14 +937,22 @@
     if (btn) btn.disabled = entered.trim() !== correctOtp;
   }
 
+  function checkCompletionOtp(bookingId, correctOtp, entered) {
+    const btn = document.getElementById('complete-btn-' + bookingId);
+    if (btn) btn.disabled = entered.trim() !== correctOtp;
+  }
+
   async function startJob(bookingId) {
     const btn = document.getElementById('start-btn-' + bookingId) ||
                 document.querySelector(`#jc-${bookingId} .job-action-btn`);
     if (btn) { btn.textContent = 'Updating…'; btn.disabled = true; }
 
+    const completionOtp = String(Math.floor(1000 + Math.random() * 9000));
+    const startedAt     = new Date().toISOString();
+
     const { error } = await sb
       .from('bookings')
-      .update({ status: 'In Progress' })
+      .update({ status: 'In Progress', started_at: startedAt, completion_otp: completionOtp })
       .eq('id', bookingId)
       .eq('vendor_id', vendorProfile.id);
 
@@ -923,7 +966,8 @@
   }
 
   async function completeJob(bookingId) {
-    const btn = document.querySelector(`#jc-${bookingId} .job-action-btn`);
+    const btn = document.getElementById('complete-btn-' + bookingId) ||
+                document.querySelector(`#jc-${bookingId} .job-action-btn.complete`);
     if (btn) { btn.textContent = 'Completing…'; btn.disabled = true; }
 
     const { error } = await sb

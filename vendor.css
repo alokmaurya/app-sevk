@@ -488,6 +488,22 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .job-action-btn.start    { background: #1d4ed8; color: #fff; }
 .job-action-btn.complete { background: #15803d; color: #fff; }
 
+/* Live timer row inside job card body */
+.job-timer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+.job-timer-icon { font-size: 0.9rem; }
+.job-timer {
+  font-family: monospace;
+  font-size: 1rem;
+  color: #1d4ed8;
+  letter-spacing: 0.05em;
+}
+
 /* OTP verify row inside job card footer */
 .otp-verify-row {
   display: flex;

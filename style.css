@@ -1102,6 +1102,23 @@ main {
   background: #fafafa;
 }
 
+/* Live timer row on booking card */
+.bk-timer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+.bk-timer-icon { font-size: 0.9rem; }
+.bk-timer {
+  font-family: monospace;
+  font-size: 1rem;
+  color: #1d4ed8;
+  letter-spacing: 0.05em;
+}
+
 /* OTP row on booking card */
 .bk-otp-row {
   display: flex;
