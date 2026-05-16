@@ -41,6 +41,7 @@ create table public.bookings (
   started_at     timestamptz default null,
   completion_otp text        default null,
   completed_at   timestamptz default null,
+  rating         integer     default null check (rating >= 1 and rating <= 5),
   created_at     timestamptz default now()
 );
 
@@ -69,6 +70,12 @@ create policy "Customers can insert their own bookings"
 create policy "Customers can view their own bookings"
   on public.bookings for select
   using (auth.uid() = user_id);
+
+-- Customers can submit a star rating on their own completed bookings
+create policy "Customers can submit rating on completed bookings"
+  on public.bookings for update
+  using (auth.uid() = user_id and status = 'Completed')
+  with check (auth.uid() = user_id);
 
 -- ── Booking policies (vendors) ──
 -- Vendors can see all unassigned bookings for their service type
@@ -146,6 +153,16 @@ create policy "Vendors can update status on their jobs"
 -- Add completed_at to existing bookings table:
 -- alter table public.bookings
 --   add column if not exists completed_at timestamptz default null;
+
+-- Add rating to existing bookings table:
+-- alter table public.bookings
+--   add column if not exists rating integer default null check (rating >= 1 and rating <= 5);
+
+-- Allow customers to submit rating on their completed bookings:
+-- create policy "Customers can submit rating on completed bookings"
+--   on public.bookings for update
+--   using (auth.uid() = user_id and status = 'Completed')
+--   with check (auth.uid() = user_id);
 
 -- Add status column to existing bookings table:
 -- alter table public.bookings

@@ -344,6 +344,10 @@
           <span class="profile-row-label">Member Since</span>
           <span class="profile-row-value" id="prof-since"></span>
         </div>
+        <div class="profile-row">
+          <span class="profile-row-label">Avg Rating</span>
+          <span class="profile-row-value" id="prof-avg-rating">—</span>
+        </div>
       </div>
 
       <div class="profile-edit-section">
@@ -649,7 +653,7 @@
     showPage('login');
   }
 
-  function loadProfilePage() {
+  async function loadProfilePage() {
     if (!vendorProfile) return;
     const nameParts = vendorProfile.name.split(' ');
     const firstName = nameParts[0] || '';
@@ -672,6 +676,26 @@
     document.getElementById('ed-phone').value = vendorProfile.phone;
     document.getElementById('ed-error').textContent = '';
     document.getElementById('ed-success').style.display = 'none';
+
+    const ratingEl = document.getElementById('prof-avg-rating');
+    if (ratingEl) {
+      const { data: ratedJobs } = await sb
+        .from('bookings')
+        .select('rating')
+        .eq('vendor_id', vendorProfile.id)
+        .eq('status', 'Completed')
+        .not('rating', 'is', null);
+
+      if (ratedJobs && ratedJobs.length > 0) {
+        const avg = ratedJobs.reduce((sum, j) => sum + j.rating, 0) / ratedJobs.length;
+        ratingEl.innerHTML = `
+          <span class="prof-rating-stars">${renderStars(Math.round(avg))}</span>
+          <span class="prof-rating-score">${avg.toFixed(1)}/5</span>
+          <span class="prof-rating-count">(${ratedJobs.length} rating${ratedJobs.length > 1 ? 's' : ''})</span>`;
+      } else {
+        ratingEl.textContent = 'No ratings yet';
+      }
+    }
   }
 
   async function saveProfile() {
@@ -832,6 +856,12 @@
     return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }
 
+  function renderStars(rating) {
+    return [1,2,3,4,5].map(i =>
+      `<span class="star-display ${i <= rating ? 'filled' : ''}">${i <= rating ? '★' : '☆'}</span>`
+    ).join('');
+  }
+
   function renderMyJobs() {
     clearAllTimers();
     const list = document.getElementById('myjobs-list');
@@ -912,6 +942,11 @@
           ${b.notes ? `<div class="job-row"><span class="job-row-icon">📝</span><span>${b.notes}</span></div>` : ''}
           ${status === 'In Progress' && b.started_at ? `<div class="job-timer-row"><span class="job-timer-icon">⏱</span><span>Time elapsed: <strong class="job-timer" id="timer-${b.id}">00:00:00</strong></span></div>` : ''}
           ${status === 'Completed' && b.started_at && b.completed_at ? `<div class="job-timer-row"><span class="job-timer-icon">✅</span><span>Total time taken: <strong class="job-timer">${formatDuration(b.started_at, b.completed_at)}</strong></span></div>` : ''}
+          ${status === 'Completed' ? `
+            <div class="job-rating-row">
+              <span class="job-rating-label">Customer Rating:</span>
+              ${b.rating ? `<span class="job-rating-stars">${renderStars(b.rating)}</span><span class="job-rating-score">${b.rating}/5</span>` : `<span class="job-rating-none">Not yet rated</span>`}
+            </div>` : ''}
         </div>
         ${actionBtn
           ? `<div class="job-card-footer">${actionBtn}</div>`

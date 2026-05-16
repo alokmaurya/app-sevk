@@ -871,11 +871,74 @@
             ${b.completion_otp && b.status === 'In Progress' ? `<div class="bk-otp-row"><span class="bk-otp-label">🔑 Share with vendor to complete job:</span><span class="bk-otp-code">${b.completion_otp}</span></div>` : ''}
             ${b.status === 'Completed' && b.started_at && b.completed_at ? `<div class="bk-timer-row"><span class="bk-timer-icon">✅</span><span>Total time taken: <strong class="bk-timer">${formatDuration(b.started_at, b.completed_at)}</strong></span></div>` : ''}
             ${b.status === 'Completed' && b.otp ? `<div class="bk-otp-summary"><div class="bk-otp-summary-row"><span class="bk-otp-summary-label">Start OTP</span><span class="bk-otp-summary-code">${b.otp}</span></div><div class="bk-otp-summary-row"><span class="bk-otp-summary-label">End OTP</span><span class="bk-otp-summary-code">${b.completion_otp}</span></div></div>` : ''}
+            ${b.status === 'Completed' && !b.rating ? `
+              <div class="bk-rating-section">
+                <div class="bk-rating-label">⭐ Rate this job</div>
+                <div class="bk-stars" id="stars-${b.id}">
+                  ${[1,2,3,4,5].map(n => `<span class="bk-star" data-val="${n}" onclick="selectRating('${b.id}',${n})" onmouseover="hoverRating('${b.id}',${n})" onmouseout="unhoverRating('${b.id}')">☆</span>`).join('')}
+                </div>
+                <button class="bk-rating-btn" id="rating-btn-${b.id}" onclick="submitRating('${b.id}')" disabled>Submit Rating</button>
+              </div>` : ''}
+            ${b.status === 'Completed' && b.rating ? `
+              <div class="bk-rating-done">
+                <span class="bk-rating-done-label">Your Rating:</span>
+                <span class="bk-rating-stars">${renderStars(b.rating)}</span>
+                <span class="bk-rating-score">${b.rating}/5</span>
+              </div>` : ''}
           </div>
           <div class="bk-card-footer">Booked on ${createdStr}</div>
         </div>`;
     }).join('');
     allBookings.filter(b => b.status === 'In Progress' && b.started_at).forEach(b => startTimer(b.id, b.started_at));
+  }
+
+  /* ── Star Ratings ── */
+  const selectedRatings = {};
+
+  function renderStars(rating) {
+    return [1,2,3,4,5].map(i =>
+      `<span class="star-display ${i <= rating ? 'filled' : ''}">${i <= rating ? '★' : '☆'}</span>`
+    ).join('');
+  }
+
+  function hoverRating(bookingId, val) {
+    document.querySelectorAll(`#stars-${bookingId} .bk-star`).forEach((s, i) => {
+      s.textContent = i < val ? '★' : '☆';
+      s.classList.toggle('hovered', i < val);
+    });
+  }
+
+  function unhoverRating(bookingId) {
+    const sel = selectedRatings[bookingId] || 0;
+    document.querySelectorAll(`#stars-${bookingId} .bk-star`).forEach((s, i) => {
+      s.textContent = i < sel ? '★' : '☆';
+      s.classList.toggle('selected', i < sel);
+      s.classList.remove('hovered');
+    });
+  }
+
+  function selectRating(bookingId, val) {
+    selectedRatings[bookingId] = val;
+    document.querySelectorAll(`#stars-${bookingId} .bk-star`).forEach((s, i) => {
+      s.textContent = i < val ? '★' : '☆';
+      s.classList.toggle('selected', i < val);
+      s.classList.remove('hovered');
+    });
+    const btn = document.getElementById('rating-btn-' + bookingId);
+    if (btn) btn.disabled = false;
+  }
+
+  async function submitRating(bookingId) {
+    const val = selectedRatings[bookingId];
+    if (!val) return;
+    const btn = document.getElementById('rating-btn-' + bookingId);
+    if (btn) { btn.textContent = 'Submitting…'; btn.disabled = true; }
+    const { error } = await sb.from('bookings').update({ rating: val }).eq('id', bookingId);
+    if (error) {
+      if (btn) { btn.textContent = 'Submit Rating'; btn.disabled = false; }
+      return;
+    }
+    await loadMyBookings();
   }
 
   /* ── Reset ── */
