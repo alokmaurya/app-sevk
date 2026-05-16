@@ -757,6 +757,14 @@
     Object.keys(activeTimers).forEach(id => { clearInterval(activeTimers[id]); delete activeTimers[id]; });
   }
 
+  function formatDuration(startedAt, completedAt) {
+    const secs = Math.max(0, Math.floor((new Date(completedAt).getTime() - new Date(startedAt).getTime()) / 1000));
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
   /* ── My Bookings ── */
   const STATUS_META = {
     'Scheduled':   { cls: 'status-scheduled',   label: 'Scheduled'   },
@@ -861,6 +869,8 @@
             ${b.otp && b.status === 'Scheduled' ? `<div class="bk-otp-row"><span class="bk-otp-label">🔑 Share with vendor to start job:</span><span class="bk-otp-code">${b.otp}</span></div>` : ''}
             ${b.status === 'In Progress' && b.started_at ? `<div class="bk-timer-row"><span class="bk-timer-icon">⏱</span><span>Time elapsed: <strong class="bk-timer" id="timer-${b.id}">00:00:00</strong></span></div>` : ''}
             ${b.completion_otp && b.status === 'In Progress' ? `<div class="bk-otp-row"><span class="bk-otp-label">🔑 Share with vendor to complete job:</span><span class="bk-otp-code">${b.completion_otp}</span></div>` : ''}
+            ${b.status === 'Completed' && b.started_at && b.completed_at ? `<div class="bk-timer-row"><span class="bk-timer-icon">✅</span><span>Total time taken: <strong class="bk-timer">${formatDuration(b.started_at, b.completed_at)}</strong></span></div>` : ''}
+            ${b.status === 'Completed' && b.otp ? `<div class="bk-otp-summary"><div class="bk-otp-summary-row"><span class="bk-otp-summary-label">Start OTP</span><span class="bk-otp-summary-code">${b.otp}</span></div><div class="bk-otp-summary-row"><span class="bk-otp-summary-label">End OTP</span><span class="bk-otp-summary-code">${b.completion_otp}</span></div></div>` : ''}
           </div>
           <div class="bk-card-footer">Booked on ${createdStr}</div>
         </div>`;
