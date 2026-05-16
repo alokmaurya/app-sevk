@@ -875,7 +875,7 @@
 
     const { error } = await sb
       .from('bookings')
-      .update({ vendor_id: vendorProfile.id, status: 'Scheduled' })
+      .update({ vendor_id: vendorProfile.id, vendor_name: vendorProfile.name, status: 'Scheduled' })
       .eq('id', bookingId)
       .is('vendor_id', null);
 

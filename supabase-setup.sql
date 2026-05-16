@@ -36,6 +36,7 @@ create table public.bookings (
   status         text        default 'Scheduled'
                              check (status in ('Scheduled', 'In Progress', 'Completed')),
   vendor_id      uuid        references public.vendors(id) on delete set null,
+  vendor_name    text        default null,
   created_at     timestamptz default now()
 );
 
@@ -123,6 +124,10 @@ create policy "Vendors can update status on their jobs"
 -- Add vendor_id to existing bookings table:
 -- alter table public.bookings
 --   add column if not exists vendor_id uuid references public.vendors(id) on delete set null;
+
+-- Add vendor_name to existing bookings table:
+-- alter table public.bookings
+--   add column if not exists vendor_name text default null;
 
 -- Add status column to existing bookings table:
 -- alter table public.bookings
