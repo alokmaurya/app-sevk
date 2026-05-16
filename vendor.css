@@ -668,3 +668,25 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .vd-toast.show    { opacity: 1; transform: translateX(-50%) translateY(0); }
 .vd-toast.success { background: #15803d; }
 .vd-toast.error   { background: #b91c1c; }
+
+/* Star display (shared) */
+.star-display      { font-size: 1.15rem; color: #d1d5db; line-height: 1; }
+.star-display.filled { color: #f59e0b; }
+
+/* Customer rating row on completed vendor job card */
+.job-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+.job-rating-label { color: #6b7280; font-weight: 600; font-size: 0.8rem; }
+.job-rating-stars  { display: flex; gap: 0.1rem; }
+.job-rating-score  { font-weight: 700; color: #92400e; font-size: 0.82rem; }
+.job-rating-none   { color: #9ca3af; font-style: italic; font-size: 0.82rem; }
+
+/* Avg rating on vendor profile */
+.prof-rating-stars { display: inline-flex; gap: 0.1rem; vertical-align: middle; }
+.prof-rating-score { font-weight: 700; color: #92400e; margin-left: 0.3rem; }
+.prof-rating-count { color: #6b7280; font-size: 0.82rem; margin-left: 0.25rem; }
