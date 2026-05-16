@@ -831,6 +831,7 @@
             <div class="bk-row"><span class="bk-row-icon">📍</span><span>${b.address}</span></div>
             ${b.notes ? `<div class="bk-row"><span class="bk-row-icon">📝</span><span>${b.notes}</span></div>` : ''}
             ${b.vendor_name ? `<div class="bk-row"><span class="bk-row-icon">🔧</span><span>Assigned to: <strong>${b.vendor_name}</strong></span></div>` : ''}
+            ${b.otp && b.status === 'Scheduled' ? `<div class="bk-otp-row"><span class="bk-otp-label">🔑 Share with vendor to start job:</span><span class="bk-otp-code">${b.otp}</span></div>` : ''}
           </div>
           <div class="bk-card-footer">Booked on ${createdStr}</div>
         </div>`;

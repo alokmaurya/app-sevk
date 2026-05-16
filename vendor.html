@@ -839,7 +839,13 @@
     if (type === 'available') {
       actionBtn = `<button class="job-action-btn accept" onclick="acceptJob('${b.id}')">✋ Accept Job</button>`;
     } else if (status === 'Scheduled') {
-      actionBtn = `<button class="job-action-btn start" onclick="startJob('${b.id}')">▶ Start Job</button>`;
+      actionBtn = `
+        <div class="otp-verify-row">
+          <input type="text" inputmode="numeric" class="otp-input" id="otp-input-${b.id}"
+            maxlength="4" placeholder="Enter OTP from customer"
+            oninput="checkOtp('${b.id}', '${b.otp}', this.value)">
+          <button class="job-action-btn start" id="start-btn-${b.id}" onclick="startJob('${b.id}')" disabled>▶ Start Job</button>
+        </div>`;
     } else if (status === 'In Progress') {
       actionBtn = `<button class="job-action-btn complete" onclick="completeJob('${b.id}')">✅ Mark Complete</button>`;
     }
@@ -873,9 +879,11 @@
     const btn = document.querySelector(`#jc-${bookingId} .job-action-btn`);
     if (btn) { btn.textContent = 'Accepting…'; btn.disabled = true; }
 
+    const otp = String(Math.floor(1000 + Math.random() * 9000));
+
     const { error } = await sb
       .from('bookings')
-      .update({ vendor_id: vendorProfile.id, vendor_name: vendorProfile.name, status: 'Scheduled' })
+      .update({ vendor_id: vendorProfile.id, vendor_name: vendorProfile.name, otp, status: 'Scheduled' })
       .eq('id', bookingId)
       .is('vendor_id', null);
 
@@ -889,8 +897,14 @@
     switchDashTab('myjobs');
   }
 
+  function checkOtp(bookingId, correctOtp, entered) {
+    const btn = document.getElementById('start-btn-' + bookingId);
+    if (btn) btn.disabled = entered.trim() !== correctOtp;
+  }
+
   async function startJob(bookingId) {
-    const btn = document.querySelector(`#jc-${bookingId} .job-action-btn`);
+    const btn = document.getElementById('start-btn-' + bookingId) ||
+                document.querySelector(`#jc-${bookingId} .job-action-btn`);
     if (btn) { btn.textContent = 'Updating…'; btn.disabled = true; }
 
     const { error } = await sb

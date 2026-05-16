@@ -1102,6 +1102,26 @@ main {
   background: #fafafa;
 }
 
+/* OTP row on booking card */
+.bk-otp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  background: #fffbeb;
+  border: 1.5px dashed #f59e0b;
+  border-radius: 8px;
+}
+.bk-otp-label { font-size: 0.82rem; color: #92400e; }
+.bk-otp-code {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #b45309;
+  font-family: monospace;
+}
+
 /* Empty state */
 .bookings-empty-icon { font-size: 3rem; margin-bottom: 0.75rem; }
 
