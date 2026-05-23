@@ -327,7 +327,7 @@
     <div class="mbp-filters">
       <button class="filter-tab active" id="ft-all"         onclick="filterBookings('all')">All</button>
       <button class="filter-tab"        id="ft-Scheduled"   onclick="filterBookings('Scheduled')">Scheduled</button>
-      <button class="filter-tab"        id="ft-In Progress" onclick="filterBookings('In Progress')">In Progress</button>
+      <button class="filter-tab"        id="ft-inprogress"  onclick="filterBookings('In Progress')">In Progress</button>
       <button class="filter-tab"        id="ft-Completed"   onclick="filterBookings('Completed')">Completed</button>
     </div>
 
@@ -462,7 +462,11 @@
     await loadServices();
     const { data: { session } } = await sb.auth.getSession();
     currentUser = session?.user ?? null;
-    if (currentUser) await fetchCustomerProfile();
+    try {
+      if (currentUser) await fetchCustomerProfile();
+    } catch (e) {
+      customerProfile = null;
+    }
     applyAuthState();
     if (currentUser) initBooking();
   })();
@@ -499,8 +503,8 @@
   }
 
   async function logout() {
+    clearAllTimers();
     await sb.auth.signOut();
-    // onAuthStateChange fires and calls applyAuthState() which hides booking-app
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -810,6 +814,7 @@
     }
 
     const svc   = SERVICES.find(s => s.id === state.service);
+    if (!svc) { alert('Selected service not found. Please go back and choose a service again.'); return; }
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let ref = 'SVK-';
     for (let i = 0; i < 6; i++) ref += chars[Math.floor(Math.random() * chars.length)];
@@ -940,8 +945,8 @@
 
   function setActiveFilterTab(filter) {
     document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    const tabId = filter === 'all' ? 'ft-all' : 'ft-' + filter;
-    const tab = document.getElementById(tabId);
+    const idMap = { 'all': 'ft-all', 'Scheduled': 'ft-Scheduled', 'In Progress': 'ft-inprogress', 'Completed': 'ft-Completed' };
+    const tab = document.getElementById(idMap[filter] || ('ft-' + filter));
     if (tab) tab.classList.add('active');
   }
 
