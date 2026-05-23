@@ -404,6 +404,29 @@
     customerProfile = data ?? null;
   }
 
+  async function ensureCustomerProfile() {
+    if (customerProfile) return true;
+    // Try fetching once more in case it was missed during login
+    try { await fetchCustomerProfile(); } catch (e) { customerProfile = null; }
+    if (customerProfile) return true;
+    // No record exists — auto-create one from auth user metadata
+    try {
+      const meta      = currentUser.user_metadata || {};
+      const fullName  = ((meta.first_name || '') + ' ' + (meta.last_name || '')).trim()
+                        || currentUser.email.split('@')[0];
+      const { data, error } = await sb.from('customers').insert({
+        user_id: currentUser.id,
+        name:    fullName,
+        email:   currentUser.email,
+      }).select().single();
+      if (error) return false;
+      customerProfile = data;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // onAuthStateChange can fire INITIAL_SESSION with null before localStorage is read —
   // use getSession() to reliably restore the session on load (same pattern as vendor.html).
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -741,8 +764,9 @@
   /* ── Submit booking → saved to Supabase ── */
   async function submitBooking() {
     if (!validateForm()) return;
-    if (!customerProfile) {
-      alert('Your customer profile could not be loaded. Please log out and log in again.');
+    const profileReady = await ensureCustomerProfile();
+    if (!profileReady) {
+      alert('Could not load your customer profile. Please log out and log in again.');
       return;
     }
 
