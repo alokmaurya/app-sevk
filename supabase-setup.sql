@@ -18,12 +18,13 @@ alter table public.services enable row level security;
 create policy "Anyone can view services"
   on public.services for select using (true);
 
--- Seed the four services
+-- Seed the five services
 insert into public.services (id, name, emoji, description) values
   ('electrician', 'Electrician',      '⚡', 'Wiring, panels, fault finding & repairs'),
   ('plumber',     'Plumber',          '🔧', 'Leaks, pipe bursts & full installations'),
   ('wall',        'Wall Specialists', '🧱', 'Plastering, drywall & surface finishes'),
-  ('glass',       'Glass Works',      '🪟', 'Windows, doors, glazing & replacements');
+  ('glass',       'Glass Works',      '🪟', 'Windows, doors, glazing & replacements'),
+  ('woodwork',    'Wood Work',        '🪵', 'Carpentry, furniture & custom woodwork');
 
 -- 2. Customers table (must be created BEFORE bookings — bookings FK references it)
 create table public.customers (
@@ -207,7 +208,13 @@ create policy "Vendors can update status on their jobs"
 --   ('electrician','Electrician','⚡','Wiring, panels, fault finding & repairs'),
 --   ('plumber','Plumber','🔧','Leaks, pipe bursts & full installations'),
 --   ('wall','Wall Specialists','🧱','Plastering, drywall & surface finishes'),
---   ('glass','Glass Works','🪟','Windows, doors, glazing & replacements');
+--   ('glass','Glass Works','🪟','Windows, doors, glazing & replacements'),
+--   ('woodwork','Wood Work','🪵','Carpentry, furniture & custom woodwork');
+
+-- Add Wood Work to an existing services table:
+-- insert into public.services (id, name, emoji, description) values
+--   ('woodwork','Wood Work','🪵','Carpentry, furniture & custom woodwork')
+--   on conflict (id) do nothing;
 
 -- Create customers table if missing:
 -- create table public.customers (
