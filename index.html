@@ -378,34 +378,59 @@
 
   /* ══ Booking state ══ */
   const state = { step:1, service:null, date:null, time:null, calYear:0, calMonth:0 };
-  let currentUser  = null;
-  let allBookings  = [];   // cached for client-side filtering
-  let activeFilter = 'all';
+  let currentUser    = null;
+  let customerProfile = null;
+  let allBookings    = [];   // cached for client-side filtering
+  let activeFilter   = 'all';
 
   /* ══════════════════════════════════════════
      AUTH — Supabase
   ══════════════════════════════════════════ */
 
-  /* Listen for sign-in / sign-out / token refresh */
-  sb.auth.onAuthStateChange((_event, session) => {
+  async function fetchCustomerProfile() {
+    const { data } = await sb
+      .from('customers')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+    customerProfile = data ?? null;
+  }
+
+  // onAuthStateChange can fire INITIAL_SESSION with null before localStorage is read —
+  // use getSession() to reliably restore the session on load (same pattern as vendor.html).
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'INITIAL_SESSION') return; // handled by initAuth() below
     currentUser = session?.user ?? null;
+    if (currentUser) await fetchCustomerProfile();
+    else customerProfile = null;
     applyAuthState();
     if (currentUser) initBooking();
   });
 
+  (async function initAuth() {
+    const { data: { session } } = await sb.auth.getSession();
+    currentUser = session?.user ?? null;
+    if (currentUser) await fetchCustomerProfile();
+    applyAuthState();
+    if (currentUser) initBooking();
+  })();
+
   function applyAuthState() {
     const loggedIn = !!currentUser;
 
-    document.getElementById('guest-buttons').style.display   = loggedIn ? 'none' : '';
-    document.getElementById('user-menu').style.display       = loggedIn ? ''     : 'none';
-    document.getElementById('landing-page').style.display    = loggedIn ? 'none' : '';
-    document.getElementById('booking-app').style.display     = loggedIn ? ''     : 'none';
+    document.getElementById('guest-buttons').style.display    = loggedIn ? 'none' : '';
+    document.getElementById('user-menu').style.display        = loggedIn ? ''     : 'none';
+    document.getElementById('landing-page').style.display     = loggedIn ? 'none' : '';
+    document.getElementById('booking-app').style.display      = loggedIn ? ''     : 'none';
     document.getElementById('my-bookings-page').style.display = 'none'; // always reset on auth change
 
     if (loggedIn) {
+      // Prefer dedicated customers table; fall back to auth user_metadata for new sessions
       const meta      = currentUser.user_metadata || {};
-      const firstName = meta.first_name || currentUser.email.split('@')[0];
-      const lastName  = meta.last_name  || '';
+      const fullName  = customerProfile?.name || ((meta.first_name || '') + ' ' + (meta.last_name || '')).trim() || currentUser.email.split('@')[0];
+      const parts     = fullName.split(' ');
+      const firstName = parts[0];
+      const lastName  = parts.slice(1).join(' ');
       const initials  = (firstName[0] + (lastName ? lastName[0] : '')).toUpperCase();
 
       document.getElementById('user-avatar').textContent  = initials;
@@ -414,8 +439,10 @@
 
       const nameEl  = document.getElementById('inp-name');
       const emailEl = document.getElementById('inp-email');
-      if (nameEl  && !nameEl.value)  nameEl.value  = (firstName + ' ' + lastName).trim();
-      if (emailEl && !emailEl.value) emailEl.value = currentUser.email;
+      const phoneEl = document.getElementById('inp-phone');
+      if (nameEl  && !nameEl.value)  nameEl.value  = customerProfile?.name  || fullName;
+      if (emailEl && !emailEl.value) emailEl.value = customerProfile?.email || currentUser.email;
+      if (phoneEl && !phoneEl.value && customerProfile?.phone) phoneEl.value = customerProfile.phone;
     }
   }
 
@@ -504,7 +531,15 @@
     }
 
     if (data.session) {
-      // Email confirmation is OFF — user is instantly logged in
+      // Email confirmation is OFF — user is instantly logged in; create customer record
+      const firstName = document.getElementById('su-fname').value.trim();
+      const lastName  = document.getElementById('su-lname').value.trim();
+      const { data: customer } = await sb.from('customers').insert({
+        user_id: data.user.id,
+        name:    (firstName + ' ' + lastName).trim(),
+        email,
+      }).select().single();
+      if (customer) customerProfile = customer;
       closeModal();
     } else {
       // Email confirmation is ON — show "check your email" message
@@ -699,7 +734,7 @@
     btn.disabled = true;
 
     const { error } = await sb.from('bookings').insert({
-      user_id:       currentUser.id,
+      customer_id:   customerProfile.id,
       ref_number:    ref,
       service_id:    svc.id,
       service_name:  svc.name,
