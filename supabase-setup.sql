@@ -3,7 +3,29 @@
 -- Run this in: Supabase Dashboard → SQL Editor → New Query
 -- ══════════════════════════════════════════
 
--- 1. Customers table (must be created BEFORE bookings — bookings FK references it)
+-- 1. Services table (lookup — created first, referenced by vendors & bookings)
+create table public.services (
+  id          text        primary key,
+  name        text        not null,
+  emoji       text        not null,
+  description text        not null,
+  created_at  timestamptz default now()
+);
+
+alter table public.services enable row level security;
+
+-- Services are publicly readable (no auth required)
+create policy "Anyone can view services"
+  on public.services for select using (true);
+
+-- Seed the four services
+insert into public.services (id, name, emoji, description) values
+  ('electrician', 'Electrician',      '⚡', 'Wiring, panels, fault finding & repairs'),
+  ('plumber',     'Plumber',          '🔧', 'Leaks, pipe bursts & full installations'),
+  ('wall',        'Wall Specialists', '🧱', 'Plastering, drywall & surface finishes'),
+  ('glass',       'Glass Works',      '🪟', 'Windows, doors, glazing & replacements');
+
+-- 2. Customers table (must be created BEFORE bookings — bookings FK references it)
 create table public.customers (
   id         uuid        default gen_random_uuid() primary key,
   user_id    uuid        references auth.users(id) on delete cascade not null unique,
@@ -176,6 +198,16 @@ create policy "Vendors can update status on their jobs"
 -- ══════════════════════════════════════════
 -- IF YOUR TABLES ALREADY EXIST — run only what's missing:
 -- ══════════════════════════════════════════
+
+-- Create services table if missing:
+-- create table public.services (id text primary key, name text not null, emoji text not null, description text not null, created_at timestamptz default now());
+-- alter table public.services enable row level security;
+-- create policy "Anyone can view services" on public.services for select using (true);
+-- insert into public.services (id, name, emoji, description) values
+--   ('electrician','Electrician','⚡','Wiring, panels, fault finding & repairs'),
+--   ('plumber','Plumber','🔧','Leaks, pipe bursts & full installations'),
+--   ('wall','Wall Specialists','🧱','Plastering, drywall & surface finishes'),
+--   ('glass','Glass Works','🪟','Windows, doors, glazing & replacements');
 
 -- Create customers table if missing:
 -- create table public.customers (
