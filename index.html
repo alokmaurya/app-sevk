@@ -821,9 +821,10 @@
   function renderBookingCards(filter) {
     clearAllTimers();
     const list = document.getElementById('mbp-list');
-    const filtered = filter === 'all'
-      ? allBookings
-      : allBookings.filter(b => b.status === filter);
+    const filtered = (filter === 'all'
+      ? [...allBookings]
+      : allBookings.filter(b => b.status === filter)
+    ).sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (!filtered.length) {
       const msg = allBookings.length === 0

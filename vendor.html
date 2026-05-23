@@ -875,8 +875,7 @@
         </div>`;
       return;
     }
-    const order = { 'In Progress': 0, 'Scheduled': 1, 'Completed': 2 };
-    const sorted = [...myJobs].sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
+    const sorted = [...myJobs].sort((a, b) => new Date(b.date) - new Date(a.date));
     list.innerHTML = sorted.map(b => buildJobCard(b, 'mine')).join('');
     myJobs.filter(b => b.status === 'In Progress' && b.started_at).forEach(b => startTimer(b.id, b.started_at));
   }
@@ -892,7 +891,8 @@
         </div>`;
       return;
     }
-    list.innerHTML = availableJobs.map(b => buildJobCard(b, 'available')).join('');
+    const sorted = [...availableJobs].sort((a, b) => new Date(b.date) - new Date(a.date));
+    list.innerHTML = sorted.map(b => buildJobCard(b, 'available')).join('');
   }
 
   function buildJobCard(b, type) {
