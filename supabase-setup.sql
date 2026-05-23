@@ -3,7 +3,43 @@
 -- Run this in: Supabase Dashboard → SQL Editor → New Query
 -- ══════════════════════════════════════════
 
--- 1. Vendors table (must be created BEFORE bookings — bookings FK references it)
+-- 1. Services table (lookup — created first, referenced by vendors & bookings)
+create table public.services (
+  id          text        primary key,
+  name        text        not null,
+  emoji       text        not null,
+  description text        not null,
+  created_at  timestamptz default now()
+);
+
+alter table public.services enable row level security;
+
+-- Services are publicly readable (no auth required)
+create policy "Anyone can view services"
+  on public.services for select using (true);
+
+-- Seed the five services
+insert into public.services (id, name, emoji, description) values
+  ('electrician', 'Electrician',      '⚡', 'Wiring, panels, fault finding & repairs'),
+  ('plumber',     'Plumber',          '🔧', 'Leaks, pipe bursts & full installations'),
+  ('wall',        'Wall Specialists', '🧱', 'Plastering, drywall & surface finishes'),
+  ('glass',       'Glass Works',      '🪟', 'Windows, doors, glazing & replacements'),
+  ('woodwork',    'Wood Work',              '🪵', 'Carpentry, furniture & custom woodwork'),
+  ('painting',    'Painting & Decorating',  '🏠', 'Interior/exterior painting, wallpapering & decorating'),
+  ('hvac',        'HVAC & Climate Control', '❄️', 'AC installation, heating systems & ventilation'),
+  ('locksmith',   'Locksmith & Security',   '🔒', 'Lock fitting, key cutting & security systems');
+
+-- 2. Customers table (must be created BEFORE bookings — bookings FK references it)
+create table public.customers (
+  id         uuid        default gen_random_uuid() primary key,
+  user_id    uuid        references auth.users(id) on delete cascade not null unique,
+  name       text        not null,
+  email      text        not null,
+  phone      text        default null,
+  created_at timestamptz default now()
+);
+
+-- 2. Vendors table (must be created BEFORE bookings — bookings FK references it)
 create table public.vendors (
   id             uuid        default gen_random_uuid() primary key,
   user_id        uuid        references auth.users(id) on delete cascade not null unique,
@@ -18,10 +54,10 @@ create table public.vendors (
   created_at     timestamptz default now()
 );
 
--- 2. Bookings table
+-- 3. Bookings table
 create table public.bookings (
   id             uuid        default gen_random_uuid() primary key,
-  user_id        uuid        references auth.users(id) on delete cascade not null,
+  customer_id    uuid        references public.customers(id) on delete cascade not null,
   ref_number     text        not null,
   service_id     text        not null,
   service_name   text        not null,
@@ -45,9 +81,23 @@ create table public.bookings (
   created_at     timestamptz default now()
 );
 
--- 3. Enable Row Level Security
-alter table public.vendors  enable row level security;
-alter table public.bookings enable row level security;
+-- 4. Enable Row Level Security
+alter table public.customers enable row level security;
+alter table public.vendors   enable row level security;
+alter table public.bookings  enable row level security;
+
+-- ── Customer profile policies ──
+create policy "Customers can insert their own profile"
+  on public.customers for insert
+  with check (auth.uid() = user_id);
+
+create policy "Customers can view their own profile"
+  on public.customers for select
+  using (auth.uid() = user_id);
+
+create policy "Customers can update their own profile"
+  on public.customers for update
+  using (auth.uid() = user_id);
 
 -- ── Vendor profile policies ──
 create policy "Vendors can insert their own profile"
@@ -65,17 +115,41 @@ create policy "Vendors can update their own profile"
 -- ── Booking policies (customers) ──
 create policy "Customers can insert their own bookings"
   on public.bookings for insert
-  with check (auth.uid() = user_id);
+  with check (
+    exists (
+      select 1 from public.customers c
+      where c.user_id = auth.uid()
+        and c.id = bookings.customer_id
+    )
+  );
 
 create policy "Customers can view their own bookings"
   on public.bookings for select
-  using (auth.uid() = user_id);
+  using (
+    exists (
+      select 1 from public.customers c
+      where c.user_id = auth.uid()
+        and c.id = bookings.customer_id
+    )
+  );
 
--- Customers can submit a star rating on their own completed bookings
 create policy "Customers can submit rating on completed bookings"
   on public.bookings for update
-  using (auth.uid() = user_id and status = 'Completed')
-  with check (auth.uid() = user_id);
+  using (
+    status = 'Completed' and
+    exists (
+      select 1 from public.customers c
+      where c.user_id = auth.uid()
+        and c.id = bookings.customer_id
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.customers c
+      where c.user_id = auth.uid()
+        and c.id = bookings.customer_id
+    )
+  );
 
 -- ── Booking policies (vendors) ──
 -- Vendors can see all unassigned bookings for their service type
@@ -129,42 +203,52 @@ create policy "Vendors can update status on their jobs"
 -- IF YOUR TABLES ALREADY EXIST — run only what's missing:
 -- ══════════════════════════════════════════
 
--- Create vendors table if missing:
--- (copy the CREATE TABLE vendors block above)
+-- Create services table if missing:
+-- create table public.services (id text primary key, name text not null, emoji text not null, description text not null, created_at timestamptz default now());
+-- alter table public.services enable row level security;
+-- create policy "Anyone can view services" on public.services for select using (true);
+-- insert into public.services (id, name, emoji, description) values
+--   ('electrician','Electrician','⚡','Wiring, panels, fault finding & repairs'),
+--   ('plumber','Plumber','🔧','Leaks, pipe bursts & full installations'),
+--   ('wall','Wall Specialists','🧱','Plastering, drywall & surface finishes'),
+--   ('glass','Glass Works','🪟','Windows, doors, glazing & replacements'),
+--   ('woodwork','Wood Work','🪵','Carpentry, furniture & custom woodwork');
 
--- Add vendor_id to existing bookings table:
--- alter table public.bookings
---   add column if not exists vendor_id uuid references public.vendors(id) on delete set null;
+-- Add new services to an existing services table:
+-- insert into public.services (id, name, emoji, description) values
+--   ('woodwork',  'Wood Work',              '🪵', 'Carpentry, furniture & custom woodwork'),
+--   ('painting',  'Painting & Decorating',  '🏠', 'Interior/exterior painting, wallpapering & decorating'),
+--   ('hvac',      'HVAC & Climate Control', '❄️', 'AC installation, heating systems & ventilation'),
+--   ('locksmith', 'Locksmith & Security',   '🔒', 'Lock fitting, key cutting & security systems')
+--   on conflict (id) do nothing;
 
--- Add vendor_name to existing bookings table:
--- alter table public.bookings
---   add column if not exists vendor_name text default null;
+-- Create customers table if missing:
+-- create table public.customers (
+--   id uuid default gen_random_uuid() primary key,
+--   user_id uuid references auth.users(id) on delete cascade not null unique,
+--   name text not null, email text not null, phone text default null,
+--   created_at timestamptz default now()
+-- );
+-- alter table public.customers enable row level security;
+-- (then add the three customer policies above)
 
--- Add otp to existing bookings table:
+-- Rename bookings.user_id → customer_id and re-point FK to customers:
+-- alter table public.bookings rename column user_id to customer_id;
 -- alter table public.bookings
---   add column if not exists otp text default null;
+--   drop constraint bookings_user_id_fkey,
+--   add constraint bookings_customer_id_fkey
+--     foreign key (customer_id) references public.customers(id) on delete cascade;
 
--- Add started_at and completion_otp to existing bookings table:
--- alter table public.bookings
---   add column if not exists started_at timestamptz default null;
--- alter table public.bookings
---   add column if not exists completion_otp text default null;
+-- Drop old booking customer policies and recreate with customer_id:
+-- drop policy "Customers can insert their own bookings" on public.bookings;
+-- drop policy "Customers can view their own bookings" on public.bookings;
+-- drop policy "Customers can submit rating on completed bookings" on public.bookings;
+-- (then add the updated policies above)
 
--- Add completed_at to existing bookings table:
--- alter table public.bookings
---   add column if not exists completed_at timestamptz default null;
-
--- Add rating to existing bookings table:
--- alter table public.bookings
---   add column if not exists rating integer default null check (rating >= 1 and rating <= 5);
-
--- Allow customers to submit rating on their completed bookings:
--- create policy "Customers can submit rating on completed bookings"
---   on public.bookings for update
---   using (auth.uid() = user_id and status = 'Completed')
---   with check (auth.uid() = user_id);
-
--- Add status column to existing bookings table:
--- alter table public.bookings
---   add column if not exists status text default 'Scheduled'
---   check (status in ('Scheduled', 'In Progress', 'Completed'));
+-- Backfill customers table from existing auth.users (adjust as needed):
+-- insert into public.customers (user_id, name, email)
+--   select id, coalesce(raw_user_meta_data->>'first_name','') || ' ' ||
+--          coalesce(raw_user_meta_data->>'last_name',''), email
+--   from auth.users
+--   where id not in (select user_id from public.vendors)
+--   on conflict do nothing;

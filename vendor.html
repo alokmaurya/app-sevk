@@ -103,12 +103,7 @@
     <div class="v-land-container">
       <h2 class="v-section-title" style="color:#fff">We're Looking For</h2>
       <p class="v-section-sub" style="color:#aaa">Experienced tradespeople in these areas.</p>
-      <div class="v-trades">
-        <div class="v-trade-card"><span>⚡</span><strong>Electricians</strong><p>Wiring, panels &amp; repairs</p></div>
-        <div class="v-trade-card"><span>🔧</span><strong>Plumbers</strong><p>Leaks, pipes &amp; installations</p></div>
-        <div class="v-trade-card"><span>🧱</span><strong>Wall Specialists</strong><p>Plastering, drywall &amp; finishes</p></div>
-        <div class="v-trade-card"><span>🪟</span><strong>Glass Works</strong><p>Windows, doors &amp; glazing</p></div>
-      </div>
+      <div class="v-trades" id="v-trades-grid"></div>
     </div>
   </section>
 
@@ -205,10 +200,6 @@
           <label for="rg-service">Trade / Service</label>
           <select id="rg-service">
             <option value="">— Select your service —</option>
-            <option value="electrician" data-emoji="⚡" data-name="Electrician">⚡ Electrician</option>
-            <option value="plumber"     data-emoji="🔧" data-name="Plumber">🔧 Plumber</option>
-            <option value="wall"        data-emoji="🧱" data-name="Wall Specialists">🧱 Wall Specialists</option>
-            <option value="glass"       data-emoji="🪟" data-name="Glass Works">🪟 Glass Works</option>
           </select>
           <span class="field-error">Please select your trade.</span>
         </div>
@@ -409,10 +400,39 @@
     }
   }
 
+  let SERVICES      = [];
   let currentUser   = null;
   let vendorProfile = null;
   let availableJobs = [];
   let myJobs        = [];
+
+  async function loadServices() {
+    const { data } = await sb.from('services').select('*').order('name');
+    if (data && data.length) {
+      SERVICES = data;
+      renderTradeCards();
+      renderServiceDropdown();
+    }
+  }
+
+  function renderTradeCards() {
+    const el = document.getElementById('v-trades-grid');
+    if (el) el.innerHTML = SERVICES.map(s => `
+      <div class="v-trade-card">
+        <span>${s.emoji}</span>
+        <strong>${s.name}</strong>
+        <p>${s.description}</p>
+      </div>`).join('');
+  }
+
+  function renderServiceDropdown() {
+    const sel = document.getElementById('rg-service');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Select your service —</option>' +
+      SERVICES.map(s =>
+        `<option value="${s.id}" data-emoji="${s.emoji}" data-name="${s.name}">${s.emoji} ${s.name}</option>`
+      ).join('');
+  }
   let refreshTimer  = null;
 
   const STATUS_META = {
@@ -435,7 +455,10 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  sb.auth.onAuthStateChange(async (_event, session) => {
+  // onAuthStateChange fires INITIAL_SESSION with null before localStorage is read
+  // in some Supabase v2 builds — use getSession() to reliably restore the session on load.
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'INITIAL_SESSION') return; // handled by initAuth() below
     currentUser = session?.user ?? null;
     if (currentUser) {
       await fetchVendorProfile();
@@ -445,6 +468,14 @@
     }
     applyAuthState();
   });
+
+  (async function initAuth() {
+    await loadServices();
+    const { data: { session } } = await sb.auth.getSession();
+    currentUser = session?.user ?? null;
+    if (currentUser) await fetchVendorProfile();
+    applyAuthState();
+  })();
 
   async function fetchVendorProfile() {
     const { data, error } = await sb
