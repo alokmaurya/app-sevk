@@ -24,7 +24,10 @@ insert into public.services (id, name, emoji, description) values
   ('plumber',     'Plumber',          '🔧', 'Leaks, pipe bursts & full installations'),
   ('wall',        'Wall Specialists', '🧱', 'Plastering, drywall & surface finishes'),
   ('glass',       'Glass Works',      '🪟', 'Windows, doors, glazing & replacements'),
-  ('woodwork',    'Wood Work',        '🪵', 'Carpentry, furniture & custom woodwork');
+  ('woodwork',    'Wood Work',              '🪵', 'Carpentry, furniture & custom woodwork'),
+  ('painting',    'Painting & Decorating',  '🏠', 'Interior/exterior painting, wallpapering & decorating'),
+  ('hvac',        'HVAC & Climate Control', '❄️', 'AC installation, heating systems & ventilation'),
+  ('locksmith',   'Locksmith & Security',   '🔒', 'Lock fitting, key cutting & security systems');
 
 -- 2. Customers table (must be created BEFORE bookings — bookings FK references it)
 create table public.customers (
@@ -211,9 +214,12 @@ create policy "Vendors can update status on their jobs"
 --   ('glass','Glass Works','🪟','Windows, doors, glazing & replacements'),
 --   ('woodwork','Wood Work','🪵','Carpentry, furniture & custom woodwork');
 
--- Add Wood Work to an existing services table:
+-- Add new services to an existing services table:
 -- insert into public.services (id, name, emoji, description) values
---   ('woodwork','Wood Work','🪵','Carpentry, furniture & custom woodwork')
+--   ('woodwork',  'Wood Work',              '🪵', 'Carpentry, furniture & custom woodwork'),
+--   ('painting',  'Painting & Decorating',  '🏠', 'Interior/exterior painting, wallpapering & decorating'),
+--   ('hvac',      'HVAC & Climate Control', '❄️', 'AC installation, heating systems & ventilation'),
+--   ('locksmith', 'Locksmith & Security',   '🔒', 'Lock fitting, key cutting & security systems')
 --   on conflict (id) do nothing;
 
 -- Create customers table if missing:
