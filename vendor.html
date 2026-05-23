@@ -435,7 +435,10 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  sb.auth.onAuthStateChange(async (_event, session) => {
+  // onAuthStateChange fires INITIAL_SESSION with null before localStorage is read
+  // in some Supabase v2 builds — use getSession() to reliably restore the session on load.
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'INITIAL_SESSION') return; // handled by initAuth() below
     currentUser = session?.user ?? null;
     if (currentUser) {
       await fetchVendorProfile();
@@ -445,6 +448,13 @@
     }
     applyAuthState();
   });
+
+  (async function initAuth() {
+    const { data: { session } } = await sb.auth.getSession();
+    currentUser = session?.user ?? null;
+    if (currentUser) await fetchVendorProfile();
+    applyAuthState();
+  })();
 
   async function fetchVendorProfile() {
     const { data, error } = await sb
