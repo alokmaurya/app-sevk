@@ -355,14 +355,30 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   /* ══ App Data (loaded from DB) ══ */
+  const FALLBACK_SERVICES = [
+    { id: 'electrician', name: 'Electrician',              emoji: '⚡',  description: 'Wiring, panels, fault finding & repairs' },
+    { id: 'plumber',     name: 'Plumber',                  emoji: '🔧', description: 'Leaks, pipe bursts & full installations' },
+    { id: 'wall',        name: 'Wall Specialists',          emoji: '🧱', description: 'Plastering, drywall & surface finishes' },
+    { id: 'glass',       name: 'Glass Works',               emoji: '🪟', description: 'Windows, doors, glazing & replacements' },
+    { id: 'woodwork',    name: 'Wood Work',                 emoji: '🪵', description: 'Carpentry, furniture & custom woodwork' },
+    { id: 'painting',    name: 'Painting & Decorating',     emoji: '🏠', description: 'Interior/exterior painting, wallpapering & decorating' },
+    { id: 'hvac',        name: 'HVAC & Climate Control',    emoji: '❄️',  description: 'AC installation, heating systems & ventilation' },
+    { id: 'locksmith',   name: 'Locksmith & Security',      emoji: '🔒', description: 'Lock fitting, key cutting & security systems' },
+  ];
   let SERVICES = [];
 
   async function loadServices() {
-    const { data } = await sb.from('services').select('*').order('name');
-    if (data && data.length) {
-      SERVICES = data;
-      renderLandingServices();
+    try {
+      const { data, error } = await sb.from('services').select('*').order('name');
+      if (!error && data && data.length) {
+        SERVICES = data;
+      } else {
+        SERVICES = [...FALLBACK_SERVICES];
+      }
+    } catch (e) {
+      SERVICES = [...FALLBACK_SERVICES];
     }
+    renderLandingServices();
   }
 
   function renderLandingServices() {
