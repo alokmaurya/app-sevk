@@ -409,8 +409,12 @@
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'INITIAL_SESSION') return; // handled by initAuth() below
     currentUser = session?.user ?? null;
-    if (currentUser) await fetchCustomerProfile();
-    else customerProfile = null;
+    try {
+      if (currentUser) await fetchCustomerProfile();
+      else customerProfile = null;
+    } catch (e) {
+      customerProfile = null;
+    }
     applyAuthState();
     if (currentUser) initBooking();
   });
@@ -482,7 +486,7 @@
     btn.disabled = true;
     document.getElementById('li-error').textContent = '';
 
-    const { error } = await sb.auth.signInWithPassword({
+    const { data, error } = await sb.auth.signInWithPassword({
       email:    document.getElementById('li-email').value.trim(),
       password: document.getElementById('li-pass').value,
     });
@@ -497,8 +501,13 @@
           : error.message;
       return;
     }
-    // onAuthStateChange fires → applyAuthState() handles UI transition
+
+    // Directly apply auth state so login works even if onAuthStateChange is slow
+    currentUser = data.user;
+    try { await fetchCustomerProfile(); } catch (e) { customerProfile = null; }
     closeModal();
+    applyAuthState();
+    initBooking();
   }
 
   /* ── Sign Up ── */
@@ -541,15 +550,22 @@
 
     if (data.session) {
       // Email confirmation is OFF — user is instantly logged in; create customer record
+      currentUser = data.user;
       const firstName = document.getElementById('su-fname').value.trim();
       const lastName  = document.getElementById('su-lname').value.trim();
-      const { data: customer } = await sb.from('customers').insert({
-        user_id: data.user.id,
-        name:    (firstName + ' ' + lastName).trim(),
-        email,
-      }).select().single();
-      if (customer) customerProfile = customer;
+      try {
+        const { data: customer } = await sb.from('customers').insert({
+          user_id: data.user.id,
+          name:    (firstName + ' ' + lastName).trim(),
+          email,
+        }).select().single();
+        if (customer) customerProfile = customer;
+      } catch (e) {
+        customerProfile = null;
+      }
       closeModal();
+      applyAuthState();
+      initBooking();
     } else {
       // Email confirmation is ON — show "check your email" message
       document.getElementById('su-form-body').style.display = 'none';
@@ -725,6 +741,10 @@
   /* ── Submit booking → saved to Supabase ── */
   async function submitBooking() {
     if (!validateForm()) return;
+    if (!customerProfile) {
+      alert('Your customer profile could not be loaded. Please log out and log in again.');
+      return;
+    }
 
     const svc   = SERVICES.find(s => s.id === state.service);
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
