@@ -142,12 +142,7 @@
     <div class="land-container">
       <h2 class="section-title">Our Services</h2>
       <p class="section-sub">Professional tradespeople available around the clock.</p>
-      <div class="land-services">
-        <div class="land-svc-card"><span class="land-svc-emoji">⚡</span><h3>Electrician</h3><p>Wiring, panels, fault finding & repairs</p></div>
-        <div class="land-svc-card"><span class="land-svc-emoji">🔧</span><h3>Plumber</h3><p>Leaks, pipe bursts & full installations</p></div>
-        <div class="land-svc-card"><span class="land-svc-emoji">🧱</span><h3>Wall Specialists</h3><p>Plastering, drywall & surface finishes</p></div>
-        <div class="land-svc-card"><span class="land-svc-emoji">🪟</span><h3>Glass Works</h3><p>Windows, doors, glazing & replacements</p></div>
-      </div>
+      <div class="land-services" id="land-services-grid"></div>
     </div>
   </section>
 
@@ -359,13 +354,26 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBraHBrbXBzY3pucWtnYXN4d2RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDgzODAsImV4cCI6MjA5Mzk4NDM4MH0.y6hpeO_joE9AcdmfYEofsDSwqvGsCVRPbSUo3VtsbgY'; 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  /* ══ App Data ══ */
-  const SERVICES = [
-    { id: 'electrician', emoji: '⚡', name: 'Electrician',      desc: 'Wiring, panels & repairs' },
-    { id: 'plumber',     emoji: '🔧', name: 'Plumber',          desc: 'Leaks, pipes & installations' },
-    { id: 'wall',        emoji: '🧱', name: 'Wall Specialists', desc: 'Plastering, drywall & finishes' },
-    { id: 'glass',       emoji: '🪟', name: 'Glass Works',      desc: 'Windows, doors & glazing' },
-  ];
+  /* ══ App Data (loaded from DB) ══ */
+  let SERVICES = [];
+
+  async function loadServices() {
+    const { data } = await sb.from('services').select('*').order('name');
+    if (data && data.length) {
+      SERVICES = data;
+      renderLandingServices();
+    }
+  }
+
+  function renderLandingServices() {
+    const el = document.getElementById('land-services-grid');
+    if (el) el.innerHTML = SERVICES.map(s => `
+      <div class="land-svc-card">
+        <span class="land-svc-emoji">${s.emoji}</span>
+        <h3>${s.name}</h3>
+        <p>${s.description}</p>
+      </div>`).join('');
+  }
 
   const TIME_GROUPS = [
     { label: '🌅 Morning (6 AM – 12 PM)',       slots: ['6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM'] },
@@ -378,34 +386,60 @@
 
   /* ══ Booking state ══ */
   const state = { step:1, service:null, date:null, time:null, calYear:0, calMonth:0 };
-  let currentUser  = null;
-  let allBookings  = [];   // cached for client-side filtering
-  let activeFilter = 'all';
+  let currentUser    = null;
+  let customerProfile = null;
+  let allBookings    = [];   // cached for client-side filtering
+  let activeFilter   = 'all';
 
   /* ══════════════════════════════════════════
      AUTH — Supabase
   ══════════════════════════════════════════ */
 
-  /* Listen for sign-in / sign-out / token refresh */
-  sb.auth.onAuthStateChange((_event, session) => {
+  async function fetchCustomerProfile() {
+    const { data } = await sb
+      .from('customers')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+    customerProfile = data ?? null;
+  }
+
+  // onAuthStateChange can fire INITIAL_SESSION with null before localStorage is read —
+  // use getSession() to reliably restore the session on load (same pattern as vendor.html).
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'INITIAL_SESSION') return; // handled by initAuth() below
     currentUser = session?.user ?? null;
+    if (currentUser) await fetchCustomerProfile();
+    else customerProfile = null;
     applyAuthState();
     if (currentUser) initBooking();
   });
 
+  (async function initAuth() {
+    await loadServices();
+    const { data: { session } } = await sb.auth.getSession();
+    currentUser = session?.user ?? null;
+    if (currentUser) await fetchCustomerProfile();
+    applyAuthState();
+    if (currentUser) initBooking();
+  })();
+
   function applyAuthState() {
     const loggedIn = !!currentUser;
 
-    document.getElementById('guest-buttons').style.display   = loggedIn ? 'none' : '';
-    document.getElementById('user-menu').style.display       = loggedIn ? ''     : 'none';
-    document.getElementById('landing-page').style.display    = loggedIn ? 'none' : '';
-    document.getElementById('booking-app').style.display     = loggedIn ? ''     : 'none';
+    document.getElementById('guest-buttons').style.display    = loggedIn ? 'none' : '';
+    document.getElementById('user-menu').style.display        = loggedIn ? ''     : 'none';
+    document.getElementById('landing-page').style.display     = loggedIn ? 'none' : '';
+    document.getElementById('booking-app').style.display      = loggedIn ? ''     : 'none';
     document.getElementById('my-bookings-page').style.display = 'none'; // always reset on auth change
 
     if (loggedIn) {
+      // Prefer dedicated customers table; fall back to auth user_metadata for new sessions
       const meta      = currentUser.user_metadata || {};
-      const firstName = meta.first_name || currentUser.email.split('@')[0];
-      const lastName  = meta.last_name  || '';
+      const fullName  = customerProfile?.name || ((meta.first_name || '') + ' ' + (meta.last_name || '')).trim() || currentUser.email.split('@')[0];
+      const parts     = fullName.split(' ');
+      const firstName = parts[0];
+      const lastName  = parts.slice(1).join(' ');
       const initials  = (firstName[0] + (lastName ? lastName[0] : '')).toUpperCase();
 
       document.getElementById('user-avatar').textContent  = initials;
@@ -414,8 +448,10 @@
 
       const nameEl  = document.getElementById('inp-name');
       const emailEl = document.getElementById('inp-email');
-      if (nameEl  && !nameEl.value)  nameEl.value  = (firstName + ' ' + lastName).trim();
-      if (emailEl && !emailEl.value) emailEl.value = currentUser.email;
+      const phoneEl = document.getElementById('inp-phone');
+      if (nameEl  && !nameEl.value)  nameEl.value  = customerProfile?.name  || fullName;
+      if (emailEl && !emailEl.value) emailEl.value = customerProfile?.email || currentUser.email;
+      if (phoneEl && !phoneEl.value && customerProfile?.phone) phoneEl.value = customerProfile.phone;
     }
   }
 
@@ -504,7 +540,15 @@
     }
 
     if (data.session) {
-      // Email confirmation is OFF — user is instantly logged in
+      // Email confirmation is OFF — user is instantly logged in; create customer record
+      const firstName = document.getElementById('su-fname').value.trim();
+      const lastName  = document.getElementById('su-lname').value.trim();
+      const { data: customer } = await sb.from('customers').insert({
+        user_id: data.user.id,
+        name:    (firstName + ' ' + lastName).trim(),
+        email,
+      }).select().single();
+      if (customer) customerProfile = customer;
       closeModal();
     } else {
       // Email confirmation is ON — show "check your email" message
@@ -579,7 +623,7 @@
       <div class="service-card" id="svc-${s.id}" onclick="selectService('${s.id}')">
         <span class="service-emoji">${s.emoji}</span>
         <div class="service-name">${s.name}</div>
-        <div class="service-desc">${s.desc}</div>
+        <div class="service-desc">${s.description}</div>
       </div>`).join('');
   }
 
@@ -699,7 +743,7 @@
     btn.disabled = true;
 
     const { error } = await sb.from('bookings').insert({
-      user_id:       currentUser.id,
+      customer_id:   customerProfile.id,
       ref_number:    ref,
       service_id:    svc.id,
       service_name:  svc.name,
@@ -821,9 +865,10 @@
   function renderBookingCards(filter) {
     clearAllTimers();
     const list = document.getElementById('mbp-list');
-    const filtered = filter === 'all'
-      ? allBookings
-      : allBookings.filter(b => b.status === filter);
+    const filtered = (filter === 'all'
+      ? [...allBookings]
+      : allBookings.filter(b => b.status === filter)
+    ).sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (!filtered.length) {
       const msg = allBookings.length === 0
