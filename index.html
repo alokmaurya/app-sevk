@@ -509,10 +509,18 @@
     btn.disabled = true;
     document.getElementById('li-error').textContent = '';
 
-    const { data, error } = await sb.auth.signInWithPassword({
-      email:    document.getElementById('li-email').value.trim(),
-      password: document.getElementById('li-pass').value,
-    });
+    let data, error;
+    try {
+      ({ data, error } = await sb.auth.signInWithPassword({
+        email:    document.getElementById('li-email').value.trim(),
+        password: document.getElementById('li-pass').value,
+      }));
+    } catch (e) {
+      document.getElementById('li-error').textContent = 'Login failed. Please check your connection and try again.';
+      btn.textContent = 'Log In';
+      btn.disabled = false;
+      return;
+    }
 
     btn.textContent = 'Log In';
     btn.disabled = false;
@@ -554,20 +562,35 @@
 
     const email = document.getElementById('su-email').value.trim();
 
-    const { data, error } = await sb.auth.signUp({
-      email,
-      password: document.getElementById('su-pass').value,
-      options:  { data: {
-        first_name: document.getElementById('su-fname').value.trim(),
-        last_name:  document.getElementById('su-lname').value.trim(),
-      }},
-    });
+    let data, error;
+    try {
+      ({ data, error } = await sb.auth.signUp({
+        email,
+        password: document.getElementById('su-pass').value,
+        options:  { data: {
+          first_name: document.getElementById('su-fname').value.trim(),
+          last_name:  document.getElementById('su-lname').value.trim(),
+        }},
+      }));
+    } catch (e) {
+      document.getElementById('su-error').textContent = 'Sign up failed. Please check your connection and try again.';
+      btn.textContent = 'Create Account';
+      btn.disabled = false;
+      return;
+    }
 
     btn.textContent = 'Create Account';
     btn.disabled = false;
 
     if (error) {
       document.getElementById('su-error').textContent = error.message;
+      return;
+    }
+
+    // Supabase silently returns no session + empty identities when email already exists
+    if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+      document.getElementById('su-error').textContent =
+        'An account with this email already exists. Please log in instead.';
       return;
     }
 
