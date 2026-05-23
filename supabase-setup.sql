@@ -36,6 +36,12 @@ create table public.bookings (
   status         text        default 'Scheduled'
                              check (status in ('Scheduled', 'In Progress', 'Completed')),
   vendor_id      uuid        references public.vendors(id) on delete set null,
+  vendor_name    text        default null,
+  otp            text        default null,
+  started_at     timestamptz default null,
+  completion_otp text        default null,
+  completed_at   timestamptz default null,
+  rating         integer     default null check (rating >= 1 and rating <= 5),
   created_at     timestamptz default now()
 );
 
@@ -64,6 +70,12 @@ create policy "Customers can insert their own bookings"
 create policy "Customers can view their own bookings"
   on public.bookings for select
   using (auth.uid() = user_id);
+
+-- Customers can submit a star rating on their own completed bookings
+create policy "Customers can submit rating on completed bookings"
+  on public.bookings for update
+  using (auth.uid() = user_id and status = 'Completed')
+  with check (auth.uid() = user_id);
 
 -- ── Booking policies (vendors) ──
 -- Vendors can see all unassigned bookings for their service type
@@ -123,6 +135,34 @@ create policy "Vendors can update status on their jobs"
 -- Add vendor_id to existing bookings table:
 -- alter table public.bookings
 --   add column if not exists vendor_id uuid references public.vendors(id) on delete set null;
+
+-- Add vendor_name to existing bookings table:
+-- alter table public.bookings
+--   add column if not exists vendor_name text default null;
+
+-- Add otp to existing bookings table:
+-- alter table public.bookings
+--   add column if not exists otp text default null;
+
+-- Add started_at and completion_otp to existing bookings table:
+-- alter table public.bookings
+--   add column if not exists started_at timestamptz default null;
+-- alter table public.bookings
+--   add column if not exists completion_otp text default null;
+
+-- Add completed_at to existing bookings table:
+-- alter table public.bookings
+--   add column if not exists completed_at timestamptz default null;
+
+-- Add rating to existing bookings table:
+-- alter table public.bookings
+--   add column if not exists rating integer default null check (rating >= 1 and rating <= 5);
+
+-- Allow customers to submit rating on their completed bookings:
+-- create policy "Customers can submit rating on completed bookings"
+--   on public.bookings for update
+--   using (auth.uid() = user_id and status = 'Completed')
+--   with check (auth.uid() = user_id);
 
 -- Add status column to existing bookings table:
 -- alter table public.bookings

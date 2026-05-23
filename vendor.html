@@ -344,6 +344,10 @@
           <span class="profile-row-label">Member Since</span>
           <span class="profile-row-value" id="prof-since"></span>
         </div>
+        <div class="profile-row">
+          <span class="profile-row-label">Avg Rating</span>
+          <span class="profile-row-value" id="prof-avg-rating">—</span>
+        </div>
       </div>
 
       <div class="profile-edit-section">
@@ -649,7 +653,7 @@
     showPage('login');
   }
 
-  function loadProfilePage() {
+  async function loadProfilePage() {
     if (!vendorProfile) return;
     const nameParts = vendorProfile.name.split(' ');
     const firstName = nameParts[0] || '';
@@ -672,6 +676,26 @@
     document.getElementById('ed-phone').value = vendorProfile.phone;
     document.getElementById('ed-error').textContent = '';
     document.getElementById('ed-success').style.display = 'none';
+
+    const ratingEl = document.getElementById('prof-avg-rating');
+    if (ratingEl) {
+      const { data: ratedJobs } = await sb
+        .from('bookings')
+        .select('rating')
+        .eq('vendor_id', vendorProfile.id)
+        .eq('status', 'Completed')
+        .not('rating', 'is', null);
+
+      if (ratedJobs && ratedJobs.length > 0) {
+        const avg = ratedJobs.reduce((sum, j) => sum + j.rating, 0) / ratedJobs.length;
+        ratingEl.innerHTML = `
+          <span class="prof-rating-stars">${renderStars(Math.round(avg))}</span>
+          <span class="prof-rating-score">${avg.toFixed(1)}/5</span>
+          <span class="prof-rating-count">(${ratedJobs.length} rating${ratedJobs.length > 1 ? 's' : ''})</span>`;
+      } else {
+        ratingEl.textContent = 'No ratings yet';
+      }
+    }
   }
 
   async function saveProfile() {
@@ -798,7 +822,48 @@
     document.getElementById('vt-available').classList.toggle('active', !isMyJobs);
   }
 
+  /* ── Live Job Timers ── */
+  const activeTimers = {};
+
+  function formatElapsed(startedAt) {
+    const secs = Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000));
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function startTimer(bookingId, startedAt) {
+    if (activeTimers[bookingId]) clearInterval(activeTimers[bookingId]);
+    const tick = () => {
+      const el = document.getElementById('timer-' + bookingId);
+      if (!el) { clearInterval(activeTimers[bookingId]); delete activeTimers[bookingId]; return; }
+      el.textContent = formatElapsed(startedAt);
+    };
+    tick();
+    activeTimers[bookingId] = setInterval(tick, 1000);
+  }
+
+  function clearAllTimers() {
+    Object.keys(activeTimers).forEach(id => { clearInterval(activeTimers[id]); delete activeTimers[id]; });
+  }
+
+  function formatDuration(startedAt, completedAt) {
+    const secs = Math.max(0, Math.floor((new Date(completedAt).getTime() - new Date(startedAt).getTime()) / 1000));
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function renderStars(rating) {
+    return [1,2,3,4,5].map(i =>
+      `<span class="star-display ${i <= rating ? 'filled' : ''}">${i <= rating ? '★' : '☆'}</span>`
+    ).join('');
+  }
+
   function renderMyJobs() {
+    clearAllTimers();
     const list = document.getElementById('myjobs-list');
     if (!myJobs.length) {
       list.innerHTML = `
@@ -810,9 +875,9 @@
         </div>`;
       return;
     }
-    const order = { 'In Progress': 0, 'Scheduled': 1, 'Completed': 2 };
-    const sorted = [...myJobs].sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
+    const sorted = [...myJobs].sort((a, b) => new Date(b.date) - new Date(a.date));
     list.innerHTML = sorted.map(b => buildJobCard(b, 'mine')).join('');
+    myJobs.filter(b => b.status === 'In Progress' && b.started_at).forEach(b => startTimer(b.id, b.started_at));
   }
 
   function renderAvailableJobs() {
@@ -826,7 +891,8 @@
         </div>`;
       return;
     }
-    list.innerHTML = availableJobs.map(b => buildJobCard(b, 'available')).join('');
+    const sorted = [...availableJobs].sort((a, b) => new Date(b.date) - new Date(a.date));
+    list.innerHTML = sorted.map(b => buildJobCard(b, 'available')).join('');
   }
 
   function buildJobCard(b, type) {
@@ -839,9 +905,21 @@
     if (type === 'available') {
       actionBtn = `<button class="job-action-btn accept" onclick="acceptJob('${b.id}')">✋ Accept Job</button>`;
     } else if (status === 'Scheduled') {
-      actionBtn = `<button class="job-action-btn start" onclick="startJob('${b.id}')">▶ Start Job</button>`;
+      actionBtn = `
+        <div class="otp-verify-row">
+          <input type="text" inputmode="numeric" class="otp-input" id="otp-input-${b.id}"
+            maxlength="4" placeholder="Enter OTP from customer"
+            oninput="checkOtp('${b.id}', '${b.otp}', this.value)">
+          <button class="job-action-btn start" id="start-btn-${b.id}" onclick="startJob('${b.id}')" disabled>▶ Start Job</button>
+        </div>`;
     } else if (status === 'In Progress') {
-      actionBtn = `<button class="job-action-btn complete" onclick="completeJob('${b.id}')">✅ Mark Complete</button>`;
+      actionBtn = `
+        <div class="otp-verify-row">
+          <input type="text" inputmode="numeric" class="otp-input" id="comp-otp-input-${b.id}"
+            maxlength="4" placeholder="Enter completion OTP"
+            oninput="checkCompletionOtp('${b.id}', '${b.completion_otp}', this.value)">
+          <button class="job-action-btn complete" id="complete-btn-${b.id}" onclick="completeJob('${b.id}')" disabled>✅ Mark Complete</button>
+        </div>`;
     }
 
     return `
@@ -862,6 +940,13 @@
           <div class="job-row"><span class="job-row-icon">📞</span><span>${b.phone}</span></div>
           <div class="job-row"><span class="job-row-icon">📍</span><span>${b.address}</span></div>
           ${b.notes ? `<div class="job-row"><span class="job-row-icon">📝</span><span>${b.notes}</span></div>` : ''}
+          ${status === 'In Progress' && b.started_at ? `<div class="job-timer-row"><span class="job-timer-icon">⏱</span><span>Time elapsed: <strong class="job-timer" id="timer-${b.id}">00:00:00</strong></span></div>` : ''}
+          ${status === 'Completed' && b.started_at && b.completed_at ? `<div class="job-timer-row"><span class="job-timer-icon">✅</span><span>Total time taken: <strong class="job-timer">${formatDuration(b.started_at, b.completed_at)}</strong></span></div>` : ''}
+          ${status === 'Completed' ? `
+            <div class="job-rating-row">
+              <span class="job-rating-label">Customer Rating:</span>
+              ${b.rating ? `<span class="job-rating-stars">${renderStars(b.rating)}</span><span class="job-rating-score">${b.rating}/5</span>` : `<span class="job-rating-none">Not yet rated</span>`}
+            </div>` : ''}
         </div>
         ${actionBtn
           ? `<div class="job-card-footer">${actionBtn}</div>`
@@ -873,9 +958,11 @@
     const btn = document.querySelector(`#jc-${bookingId} .job-action-btn`);
     if (btn) { btn.textContent = 'Accepting…'; btn.disabled = true; }
 
+    const otp = String(Math.floor(1000 + Math.random() * 9000));
+
     const { error } = await sb
       .from('bookings')
-      .update({ vendor_id: vendorProfile.id, status: 'Scheduled' })
+      .update({ vendor_id: vendorProfile.id, vendor_name: vendorProfile.name, otp, status: 'Scheduled' })
       .eq('id', bookingId)
       .is('vendor_id', null);
 
@@ -889,13 +976,27 @@
     switchDashTab('myjobs');
   }
 
+  function checkOtp(bookingId, correctOtp, entered) {
+    const btn = document.getElementById('start-btn-' + bookingId);
+    if (btn) btn.disabled = entered.trim() !== correctOtp;
+  }
+
+  function checkCompletionOtp(bookingId, correctOtp, entered) {
+    const btn = document.getElementById('complete-btn-' + bookingId);
+    if (btn) btn.disabled = entered.trim() !== correctOtp;
+  }
+
   async function startJob(bookingId) {
-    const btn = document.querySelector(`#jc-${bookingId} .job-action-btn`);
+    const btn = document.getElementById('start-btn-' + bookingId) ||
+                document.querySelector(`#jc-${bookingId} .job-action-btn`);
     if (btn) { btn.textContent = 'Updating…'; btn.disabled = true; }
+
+    const completionOtp = String(Math.floor(1000 + Math.random() * 9000));
+    const startedAt     = new Date().toISOString();
 
     const { error } = await sb
       .from('bookings')
-      .update({ status: 'In Progress' })
+      .update({ status: 'In Progress', started_at: startedAt, completion_otp: completionOtp })
       .eq('id', bookingId)
       .eq('vendor_id', vendorProfile.id);
 
@@ -909,12 +1010,13 @@
   }
 
   async function completeJob(bookingId) {
-    const btn = document.querySelector(`#jc-${bookingId} .job-action-btn`);
+    const btn = document.getElementById('complete-btn-' + bookingId) ||
+                document.querySelector(`#jc-${bookingId} .job-action-btn.complete`);
     if (btn) { btn.textContent = 'Completing…'; btn.disabled = true; }
 
     const { error } = await sb
       .from('bookings')
-      .update({ status: 'Completed' })
+      .update({ status: 'Completed', completed_at: new Date().toISOString() })
       .eq('id', bookingId)
       .eq('vendor_id', vendorProfile.id);
 
