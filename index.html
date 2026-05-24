@@ -297,7 +297,10 @@
         <h1 class="mbp-title">My Bookings</h1>
         <p class="mbp-sub">Welcome back, <span id="mbp-username"></span></p>
       </div>
-      <button class="btn btn-primary" onclick="showView('booking')">&#43; New Booking</button>
+      <div style="display:flex;gap:0.6rem;align-items:center">
+        <button class="btn-mbp-refresh" id="mbp-refresh-btn" onclick="refreshMyBookings()">↻ Refresh</button>
+        <button class="btn btn-primary" onclick="showView('booking')">&#43; New Booking</button>
+      </div>
     </div>
 
     <!-- Stats row -->
@@ -1112,6 +1115,13 @@
     'In Progress': { cls: 'status-inprogress',  label: 'In Progress' },
     'Completed':   { cls: 'status-completed',   label: 'Completed'   },
   };
+
+  async function refreshMyBookings() {
+    const btn = document.getElementById('mbp-refresh-btn');
+    btn.textContent = '↻ Refreshing…'; btn.disabled = true;
+    await loadMyBookings();
+    btn.textContent = '↻ Refresh'; btn.disabled = false;
+  }
 
   async function loadMyBookings() {
     document.getElementById('mbp-list').innerHTML =

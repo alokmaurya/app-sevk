@@ -828,7 +828,7 @@
 
   function startAutoRefresh() {
     stopAutoRefresh();
-    refreshTimer = setInterval(() => { if (vendorProfile) loadDashboard(true); }, 60000);
+    refreshTimer = setInterval(() => { if (vendorProfile) loadDashboard(true); }, 3000);
   }
 
   function stopAutoRefresh() {
@@ -963,7 +963,7 @@
         <div class="vd-empty">
           <div class="vd-empty-icon">🎉</div>
           <p>No new jobs available right now.</p>
-          <p class="vd-empty-sub">Dashboard refreshes every 60 seconds. Click ↻ Refresh to check immediately.</p>
+          <p class="vd-empty-sub">Dashboard refreshes every 3 seconds. Click ↻ Refresh to check immediately.</p>
         </div>`;
       return;
     }

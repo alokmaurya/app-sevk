@@ -969,6 +969,21 @@ main {
   flex-wrap: wrap;
 }
 
+.btn-mbp-refresh {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 1rem;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-mbp-refresh:hover    { border-color: #1a1a1a; color: #1a1a1a; }
+.btn-mbp-refresh:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .mbp-title {
   font-size: 1.7rem;
   font-weight: 800;
