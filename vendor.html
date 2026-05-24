@@ -488,10 +488,14 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // onAuthStateChange fires INITIAL_SESSION with null before localStorage is read
-  // in some Supabase v2 builds — use getSession() to reliably restore the session on load.
+  // Handle all auth state changes. INITIAL_SESSION restores the session on page
+  // load/refresh from localStorage (no network call needed for a non-expired token).
+  // TOKEN_REFRESHED silently updates the token — don't reset the UI/view for that.
   sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'INITIAL_SESSION') return; // handled by initAuth() below
+    if (event === 'TOKEN_REFRESHED') {
+      currentUser = session?.user ?? null; // keep reference fresh, no UI reset
+      return;
+    }
     currentUser = session?.user ?? null;
     try {
       if (currentUser) await fetchVendorProfile();
@@ -503,22 +507,7 @@
   });
 
   (async function initAuth() {
-    // Services already rendered from fallback above; try DB update in background
-    loadServices(); // fire-and-forget
-
-    let session = null;
-    try {
-      const result = await withTimeout(sb.auth.getSession(), 10000);
-      session = result.data.session;
-    } catch (e) { /* stay logged-out on timeout */ }
-
-    currentUser = session?.user ?? null;
-    try {
-      if (currentUser) await fetchVendorProfile();
-    } catch (e) {
-      vendorProfile = null;
-    }
-    applyAuthState();
+    loadServices(); // fire-and-forget — INITIAL_SESSION above handles auth restore
   })();
 
   async function fetchVendorProfile() {
