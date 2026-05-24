@@ -350,9 +350,18 @@
   const SUPABASE_URL      = 'https://YOUR_PROJECT_ID.supabase.co';
   const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
 */
-  const SUPABASE_URL      = 'https://pkhpkmpscznqkgasxwdm.supabase.co';  
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBraHBrbXBzY3pucWtnYXN4d2RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDgzODAsImV4cCI6MjA5Mzk4NDM4MH0.y6hpeO_joE9AcdmfYEofsDSwqvGsCVRPbSUo3VtsbgY'; 
+  const SUPABASE_URL      = 'https://pkhpkmpscznqkgasxwdm.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBraHBrbXBzY3pucWtnYXN4d2RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDgzODAsImV4cCI6MjA5Mzk4NDM4MH0.y6hpeO_joE9AcdmfYEofsDSwqvGsCVRPbSUo3VtsbgY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function withTimeout(promise, ms = 20000) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), ms)
+      ),
+    ]);
+  }
 
   /* ══ App Data (loaded from DB) ══ */
   const FALLBACK_SERVICES = [
@@ -830,22 +839,29 @@
     btn.textContent = 'Saving…';
     btn.disabled = true;
 
-    const { error } = await sb.from('bookings').insert({
-      customer_id:   customerProfile.id,
-      ref_number:    ref,
-      service_id:    svc.id,
-      service_name:  svc.name,
-      service_emoji: svc.emoji,
-      date:          state.date.toISOString().split('T')[0],
-      time:          state.time,
-      name, phone, email, address, notes,
-    });
+    let insertError;
+    try {
+      const { error } = await withTimeout(sb.from('bookings').insert({
+        customer_id:   customerProfile.id,
+        ref_number:    ref,
+        service_id:    svc.id,
+        service_name:  svc.name,
+        service_emoji: svc.emoji,
+        date:          state.date.toISOString().split('T')[0],
+        time:          state.time,
+        name, phone, email, address, notes,
+      }));
+      insertError = error;
+    } catch (e) {
+      alert('Could not save booking. Please check your connection and try again.');
+      return;
+    } finally {
+      btn.textContent = 'Confirm Booking →';
+      btn.disabled = false;
+    }
 
-    btn.textContent = 'Confirm Booking →';
-    btn.disabled = false;
-
-    if (error) {
-      alert('Could not save booking: ' + error.message);
+    if (insertError) {
+      alert('Could not save booking: ' + insertError.message);
       return;
     }
 
