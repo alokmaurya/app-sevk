@@ -458,10 +458,12 @@
   function renderServiceDropdown() {
     const sel = document.getElementById('rg-service');
     if (!sel) return;
+    const current = sel.value; // preserve any existing selection
     sel.innerHTML = '<option value="">— Select your service —</option>' +
       SERVICES.map(s =>
         `<option value="${s.id}" data-emoji="${s.emoji}" data-name="${s.name}">${s.emoji} ${s.name}</option>`
       ).join('');
+    if (current) sel.value = current;
   }
   let refreshTimer  = null;
 
@@ -480,6 +482,7 @@
       const btn = document.getElementById('nav-btn-' + p);
       if (btn) btn.classList.toggle('active', p === name);
     });
+    if (name === 'register') renderServiceDropdown(); // always refresh when page is shown
     if (name === 'profile'   && vendorProfile) loadProfilePage();
     if (name === 'dashboard' && vendorProfile) { switchDashTab('myjobs'); loadDashboard(); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
