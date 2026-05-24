@@ -6,7 +6,6 @@
   <title>Sevk — Vendor Portal</title>
   <link rel="stylesheet" href="vendor.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
 </head>
 <body>
 
@@ -373,9 +372,8 @@
 </div><!-- /page-profile -->
 
 <script>
-  // Credentials loaded from config.js (gitignored) — see config.example.js
-  const SUPABASE_URL      = window.SUPABASE_URL;
-  const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
+  const SUPABASE_URL      = 'https://pkhpkmpscznqkgasxwdm.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBraHBrbXBzY3pucWtnYXN4d2RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDgzODAsImV4cCI6MjA5Mzk4NDM4MH0.y6hpeO_joE9AcdmfYEofsDSwqvGsCVRPbSUo3VtsbgY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   function withTimeout(promise, ms = 30000) {
