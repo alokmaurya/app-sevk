@@ -400,12 +400,6 @@
     }
   }
 
-  let SERVICES      = [];
-  let currentUser   = null;
-  let vendorProfile = null;
-  let availableJobs = [];
-  let myJobs        = [];
-
   const FALLBACK_SERVICES = [
     { id: 'electrician', name: 'Electrician',              emoji: '⚡',  description: 'Wiring, panels, fault finding & repairs' },
     { id: 'plumber',     name: 'Plumber',                  emoji: '🔧', description: 'Leaks, pipe bursts & full installations' },
@@ -417,17 +411,40 @@
     { id: 'locksmith',   name: 'Locksmith & Security',      emoji: '🔒', description: 'Lock fitting, key cutting & security systems' },
   ];
 
+  let SERVICES      = [...FALLBACK_SERVICES]; // pre-populated — dropdown is never empty
+  let currentUser   = null;
+  let vendorProfile = null;
+  let availableJobs = [];
+  let myJobs        = [];
+
+  // Render trade cards and service dropdown immediately (synchronously)
+  (function renderFallbackNow() {
+    const grid = document.getElementById('v-trades-grid');
+    if (grid) grid.innerHTML = SERVICES.map(s => `
+      <div class="v-trade-card">
+        <span>${s.emoji}</span>
+        <strong>${s.name}</strong>
+        <p>${s.description}</p>
+      </div>`).join('');
+    const sel = document.getElementById('rg-service');
+    if (sel) sel.innerHTML = '<option value="">— Select your service —</option>' +
+      SERVICES.map(s =>
+        `<option value="${s.id}" data-emoji="${s.emoji}" data-name="${s.name}">${s.emoji} ${s.name}</option>`
+      ).join('');
+  })();
+
   async function loadServices() {
     try {
-      const { data, error } = await sb.from('services').select('*').order('name');
-      SERVICES = (!error && data && data.length) ? data : [...FALLBACK_SERVICES];
-    } catch (e) {
-      SERVICES = [...FALLBACK_SERVICES];
-    }
-    renderTradeCards();
-    renderServiceDropdown();
+      const { data, error } = await withTimeout(
+        sb.from('services').select('*').order('name'), 8000
+      );
+      if (!error && data && data.length) {
+        SERVICES = data;
+        renderTradeCards();
+        renderServiceDropdown();
+      }
+    } catch (e) { /* keep fallback already rendered */ }
   }
-
   function renderTradeCards() {
     const el = document.getElementById('v-trades-grid');
     if (el) el.innerHTML = SERVICES.map(s => `
@@ -441,10 +458,12 @@
   function renderServiceDropdown() {
     const sel = document.getElementById('rg-service');
     if (!sel) return;
+    const current = sel.value; // preserve any existing selection
     sel.innerHTML = '<option value="">— Select your service —</option>' +
       SERVICES.map(s =>
         `<option value="${s.id}" data-emoji="${s.emoji}" data-name="${s.name}">${s.emoji} ${s.name}</option>`
       ).join('');
+    if (current) sel.value = current;
   }
   let refreshTimer  = null;
 
@@ -463,6 +482,7 @@
       const btn = document.getElementById('nav-btn-' + p);
       if (btn) btn.classList.toggle('active', p === name);
     });
+    if (name === 'register') renderServiceDropdown(); // always refresh when page is shown
     if (name === 'profile'   && vendorProfile) loadProfilePage();
     if (name === 'dashboard' && vendorProfile) { switchDashTab('myjobs'); loadDashboard(); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -483,8 +503,15 @@
   });
 
   (async function initAuth() {
-    await loadServices();
-    const { data: { session } } = await sb.auth.getSession();
+    // Services already rendered from fallback above; try DB update in background
+    loadServices(); // fire-and-forget
+
+    let session = null;
+    try {
+      const result = await withTimeout(sb.auth.getSession(), 10000);
+      session = result.data.session;
+    } catch (e) { /* stay logged-out on timeout */ }
+
     currentUser = session?.user ?? null;
     try {
       if (currentUser) await fetchVendorProfile();
@@ -495,11 +522,10 @@
   })();
 
   async function fetchVendorProfile() {
-    const { data, error } = await sb
-      .from('vendors')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      .maybeSingle();
+    const { data, error } = await withTimeout(
+      sb.from('vendors').select('*').eq('user_id', currentUser.id).maybeSingle(),
+      8000
+    );
     vendorProfile = error ? null : data;
   }
 
@@ -837,11 +863,12 @@
         '<div class="vd-loading"><span class="vd-spinner"></span> Loading available jobs…</div>';
     }
 
-    const { data, error } = await sb
-      .from('bookings')
-      .select('*')
-      .eq('service_id', vendorProfile.service_id)
-      .order('date', { ascending: true });
+    const { data, error } = await withTimeout(
+      sb.from('bookings').select('*')
+        .eq('service_id', vendorProfile.service_id)
+        .order('date', { ascending: true }),
+      15000
+    );
 
     if (error) {
       const msg = error.code === '42P01'
