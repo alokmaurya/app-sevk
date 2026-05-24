@@ -400,21 +400,51 @@
     }
   }
 
-  let SERVICES      = [];
+  const FALLBACK_SERVICES = [
+    { id: 'electrician', name: 'Electrician',              emoji: '⚡',  description: 'Wiring, panels, fault finding & repairs' },
+    { id: 'plumber',     name: 'Plumber',                  emoji: '🔧', description: 'Leaks, pipe bursts & full installations' },
+    { id: 'wall',        name: 'Wall Specialists',          emoji: '🧱', description: 'Plastering, drywall & surface finishes' },
+    { id: 'glass',       name: 'Glass Works',               emoji: '🪟', description: 'Windows, doors, glazing & replacements' },
+    { id: 'woodwork',    name: 'Wood Work',                 emoji: '🪵', description: 'Carpentry, furniture & custom woodwork' },
+    { id: 'painting',    name: 'Painting & Decorating',     emoji: '🏠', description: 'Interior/exterior painting, wallpapering & decorating' },
+    { id: 'hvac',        name: 'HVAC & Climate Control',    emoji: '❄️',  description: 'AC installation, heating systems & ventilation' },
+    { id: 'locksmith',   name: 'Locksmith & Security',      emoji: '🔒', description: 'Lock fitting, key cutting & security systems' },
+  ];
+
+  let SERVICES      = [...FALLBACK_SERVICES]; // pre-populated — dropdown is never empty
   let currentUser   = null;
   let vendorProfile = null;
   let availableJobs = [];
   let myJobs        = [];
 
-  async function loadServices() {
-    const { data } = await sb.from('services').select('*').order('name');
-    if (data && data.length) {
-      SERVICES = data;
-      renderTradeCards();
-      renderServiceDropdown();
-    }
-  }
+  // Render trade cards and service dropdown immediately (synchronously)
+  (function renderFallbackNow() {
+    const grid = document.getElementById('v-trades-grid');
+    if (grid) grid.innerHTML = SERVICES.map(s => `
+      <div class="v-trade-card">
+        <span>${s.emoji}</span>
+        <strong>${s.name}</strong>
+        <p>${s.description}</p>
+      </div>`).join('');
+    const sel = document.getElementById('rg-service');
+    if (sel) sel.innerHTML = '<option value="">— Select your service —</option>' +
+      SERVICES.map(s =>
+        `<option value="${s.id}" data-emoji="${s.emoji}" data-name="${s.name}">${s.emoji} ${s.name}</option>`
+      ).join('');
+  })();
 
+  async function loadServices() {
+    try {
+      const { data, error } = await withTimeout(
+        sb.from('services').select('*').order('name'), 8000
+      );
+      if (!error && data && data.length) {
+        SERVICES = data;
+        renderTradeCards();
+        renderServiceDropdown();
+      }
+    } catch (e) { /* keep fallback already rendered */ }
+  }
   function renderTradeCards() {
     const el = document.getElementById('v-trades-grid');
     if (el) el.innerHTML = SERVICES.map(s => `
@@ -428,10 +458,12 @@
   function renderServiceDropdown() {
     const sel = document.getElementById('rg-service');
     if (!sel) return;
+    const current = sel.value; // preserve any existing selection
     sel.innerHTML = '<option value="">— Select your service —</option>' +
       SERVICES.map(s =>
         `<option value="${s.id}" data-emoji="${s.emoji}" data-name="${s.name}">${s.emoji} ${s.name}</option>`
       ).join('');
+    if (current) sel.value = current;
   }
   let refreshTimer  = null;
 
@@ -450,39 +482,39 @@
       const btn = document.getElementById('nav-btn-' + p);
       if (btn) btn.classList.toggle('active', p === name);
     });
+    if (name === 'register') renderServiceDropdown(); // always refresh when page is shown
     if (name === 'profile'   && vendorProfile) loadProfilePage();
     if (name === 'dashboard' && vendorProfile) { switchDashTab('myjobs'); loadDashboard(); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // onAuthStateChange fires INITIAL_SESSION with null before localStorage is read
-  // in some Supabase v2 builds — use getSession() to reliably restore the session on load.
+  // Handle all auth state changes. INITIAL_SESSION restores the session on page
+  // load/refresh from localStorage (no network call needed for a non-expired token).
+  // TOKEN_REFRESHED silently updates the token — don't reset the UI/view for that.
   sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'INITIAL_SESSION') return; // handled by initAuth() below
+    if (event === 'TOKEN_REFRESHED') {
+      currentUser = session?.user ?? null; // keep reference fresh, no UI reset
+      return;
+    }
     currentUser = session?.user ?? null;
-    if (currentUser) {
-      await fetchVendorProfile();
-    } else {
+    try {
+      if (currentUser) await fetchVendorProfile();
+      else { vendorProfile = null; stopAutoRefresh(); }
+    } catch (e) {
       vendorProfile = null;
-      stopAutoRefresh();
     }
     applyAuthState();
   });
 
   (async function initAuth() {
-    await loadServices();
-    const { data: { session } } = await sb.auth.getSession();
-    currentUser = session?.user ?? null;
-    if (currentUser) await fetchVendorProfile();
-    applyAuthState();
+    loadServices(); // fire-and-forget — INITIAL_SESSION above handles auth restore
   })();
 
   async function fetchVendorProfile() {
-    const { data, error } = await sb
-      .from('vendors')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      .maybeSingle();
+    const { data, error } = await withTimeout(
+      sb.from('vendors').select('*').eq('user_id', currentUser.id).maybeSingle(),
+      8000
+    );
     vendorProfile = error ? null : data;
   }
 
@@ -522,6 +554,7 @@
   }
 
   async function vLogout() {
+    clearAllTimers();
     stopAutoRefresh();
     await sb.auth.signOut();
     vendorProfile = null;
@@ -554,7 +587,7 @@
     btn.textContent = 'Logging in…';
 
     try {
-      const { error } = await withTimeout(sb.auth.signInWithPassword({
+      const { data: loginData, error } = await withTimeout(sb.auth.signInWithPassword({
         email:    document.getElementById('li-email').value.trim(),
         password: document.getElementById('li-pass').value,
       }));
@@ -565,6 +598,10 @@
             : error.message;
         return;
       }
+      // Directly apply auth state — don't rely solely on onAuthStateChange timing
+      currentUser = loginData.user;
+      try { await fetchVendorProfile(); } catch (ep) { vendorProfile = null; }
+      applyAuthState();
     } catch (e) {
       document.getElementById('li-error').textContent =
         e.message || 'Connection error. Check your internet and try again.';
@@ -630,6 +667,13 @@
 
         if (authError) {
           document.getElementById('rg-error').textContent = authError.message;
+          return;
+        }
+
+        // Supabase returns no session + empty identities when email already exists
+        if (authData.user && (!authData.user.identities || authData.user.identities.length === 0)) {
+          document.getElementById('rg-error').textContent =
+            'An account with this email already exists. Please log in instead.';
           return;
         }
 
@@ -784,7 +828,7 @@
 
   function startAutoRefresh() {
     stopAutoRefresh();
-    refreshTimer = setInterval(() => { if (vendorProfile) loadDashboard(true); }, 60000);
+    refreshTimer = setInterval(() => { if (vendorProfile) loadDashboard(true); }, 3000);
   }
 
   function stopAutoRefresh() {
@@ -808,11 +852,12 @@
         '<div class="vd-loading"><span class="vd-spinner"></span> Loading available jobs…</div>';
     }
 
-    const { data, error } = await sb
-      .from('bookings')
-      .select('*')
-      .eq('service_id', vendorProfile.service_id)
-      .order('date', { ascending: true });
+    const { data, error } = await withTimeout(
+      sb.from('bookings').select('*')
+        .eq('service_id', vendorProfile.service_id)
+        .order('date', { ascending: true }),
+      15000
+    );
 
     if (error) {
       const msg = error.code === '42P01'
@@ -918,7 +963,7 @@
         <div class="vd-empty">
           <div class="vd-empty-icon">🎉</div>
           <p>No new jobs available right now.</p>
-          <p class="vd-empty-sub">Dashboard refreshes every 60 seconds. Click ↻ Refresh to check immediately.</p>
+          <p class="vd-empty-sub">Dashboard refreshes every 3 seconds. Click ↻ Refresh to check immediately.</p>
         </div>`;
       return;
     }

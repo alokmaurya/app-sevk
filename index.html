@@ -31,6 +31,7 @@
     <div class="user-menu" id="user-menu" style="display:none">
       <div class="user-avatar" id="user-avatar"></div>
       <span class="user-name" id="user-name"></span>
+      <button class="btn-my-bookings" onclick="showView('profile')">My Profile</button>
       <button class="btn-my-bookings" onclick="showView('my-bookings')">My Bookings</button>
       <button class="btn-logout" onclick="logout()">Log Out</button>
     </div>
@@ -296,7 +297,10 @@
         <h1 class="mbp-title">My Bookings</h1>
         <p class="mbp-sub">Welcome back, <span id="mbp-username"></span></p>
       </div>
-      <button class="btn btn-primary" onclick="showView('booking')">&#43; New Booking</button>
+      <div style="display:flex;gap:0.6rem;align-items:center">
+        <button class="btn-mbp-refresh" id="mbp-refresh-btn" onclick="refreshMyBookings()">↻ Refresh</button>
+        <button class="btn btn-primary" onclick="showView('booking')">&#43; New Booking</button>
+      </div>
     </div>
 
     <!-- Stats row -->
@@ -327,7 +331,7 @@
     <div class="mbp-filters">
       <button class="filter-tab active" id="ft-all"         onclick="filterBookings('all')">All</button>
       <button class="filter-tab"        id="ft-Scheduled"   onclick="filterBookings('Scheduled')">Scheduled</button>
-      <button class="filter-tab"        id="ft-In Progress" onclick="filterBookings('In Progress')">In Progress</button>
+      <button class="filter-tab"        id="ft-inprogress"  onclick="filterBookings('In Progress')">In Progress</button>
       <button class="filter-tab"        id="ft-Completed"   onclick="filterBookings('Completed')">Completed</button>
     </div>
 
@@ -338,6 +342,102 @@
 
   </div>
 </div><!-- /my-bookings-page -->
+
+<!-- ══════════════════════════════════════════
+     CUSTOMER PROFILE PAGE  (logged-in users)
+══════════════════════════════════════════ -->
+<div id="customer-profile-page" style="display:none">
+  <div class="cp-container">
+    <div class="cp-card">
+
+      <!-- Hero -->
+      <div class="cp-hero">
+        <div class="cp-avatar" id="cp-avatar"></div>
+        <div class="cp-hero-info">
+          <h2 class="cp-name" id="cp-name"></h2>
+          <div class="cp-badges">
+            <span class="cp-customer-badge">Customer</span>
+            <span class="cp-since-tag" id="cp-member-since"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Booking stats -->
+      <div class="cp-stats">
+        <div class="cp-stat-card">
+          <div class="cp-stat-icon">📋</div>
+          <div class="cp-stat-num" id="cp-stat-total">—</div>
+          <div class="cp-stat-label">Total Bookings</div>
+        </div>
+        <div class="cp-stat-card">
+          <div class="cp-stat-icon" style="color:#3b82f6">📅</div>
+          <div class="cp-stat-num" id="cp-stat-scheduled">—</div>
+          <div class="cp-stat-label">Scheduled</div>
+        </div>
+        <div class="cp-stat-card">
+          <div class="cp-stat-icon" style="color:#f59e0b">⚙️</div>
+          <div class="cp-stat-num" id="cp-stat-inprogress">—</div>
+          <div class="cp-stat-label">In Progress</div>
+        </div>
+        <div class="cp-stat-card">
+          <div class="cp-stat-icon" style="color:#10b981">✅</div>
+          <div class="cp-stat-num" id="cp-stat-completed">—</div>
+          <div class="cp-stat-label">Completed</div>
+        </div>
+      </div>
+
+      <!-- Account details -->
+      <div class="cp-details">
+        <h3 class="cp-section-title">Account Details</h3>
+        <div class="cp-row">
+          <span class="cp-row-label">Account Type</span>
+          <span class="cp-row-value"><span class="cp-customer-badge">Customer</span></span>
+        </div>
+        <div class="cp-row">
+          <span class="cp-row-label">Email</span>
+          <span class="cp-row-value" id="cp-email"></span>
+        </div>
+        <div class="cp-row">
+          <span class="cp-row-label">Phone</span>
+          <span class="cp-row-value" id="cp-phone"></span>
+        </div>
+        <div class="cp-row">
+          <span class="cp-row-label">Member Since</span>
+          <span class="cp-row-value" id="cp-since"></span>
+        </div>
+      </div>
+
+      <!-- Edit profile -->
+      <div class="cp-edit-section">
+        <h3 class="cp-section-title">Edit Profile</h3>
+        <div class="form-row">
+          <div class="form-group" id="cp-fg-fname">
+            <label for="cp-fname">First Name</label>
+            <input type="text" id="cp-fname" placeholder="John" />
+            <span class="field-error">Required.</span>
+          </div>
+          <div class="form-group" id="cp-fg-lname">
+            <label for="cp-lname">Last Name</label>
+            <input type="text" id="cp-lname" placeholder="Smith" />
+            <span class="field-error">Required.</span>
+          </div>
+        </div>
+        <div class="form-group" id="cp-fg-phone">
+          <label for="cp-inp-phone">Phone Number</label>
+          <input type="tel" id="cp-inp-phone" placeholder="07700 900123" />
+          <span class="field-error">Please enter a valid phone number.</span>
+        </div>
+        <div class="modal-error" id="cp-error"></div>
+        <div class="cp-success-msg" id="cp-success" style="display:none">✓ Profile updated successfully!</div>
+        <div class="cp-edit-actions">
+          <button class="btn btn-primary" id="cp-save-btn" onclick="saveCustomerProfile()">Save Changes</button>
+          <button class="btn btn-secondary" onclick="showView('my-bookings')">My Bookings</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div><!-- /customer-profile-page -->
 
 <script>
   /* ══════════════════════════════════════════
@@ -350,19 +450,56 @@
   const SUPABASE_URL      = 'https://YOUR_PROJECT_ID.supabase.co';
   const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
 */
-  const SUPABASE_URL      = 'https://pkhpkmpscznqkgasxwdm.supabase.co';  
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBraHBrbXBzY3pucWtnYXN4d2RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDgzODAsImV4cCI6MjA5Mzk4NDM4MH0.y6hpeO_joE9AcdmfYEofsDSwqvGsCVRPbSUo3VtsbgY'; 
+  const SUPABASE_URL      = 'https://pkhpkmpscznqkgasxwdm.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBraHBrbXBzY3pucWtnYXN4d2RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDgzODAsImV4cCI6MjA5Mzk4NDM4MH0.y6hpeO_joE9AcdmfYEofsDSwqvGsCVRPbSUo3VtsbgY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  /* ══ App Data (loaded from DB) ══ */
-  let SERVICES = [];
+  function withTimeout(promise, ms = 20000) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), ms)
+      ),
+    ]);
+  }
+
+  /* ══ App Data — fallback pre-loaded so page is never blank ══ */
+  const FALLBACK_SERVICES = [
+    { id: 'electrician', name: 'Electrician',              emoji: '⚡',  description: 'Wiring, panels, fault finding & repairs' },
+    { id: 'plumber',     name: 'Plumber',                  emoji: '🔧', description: 'Leaks, pipe bursts & full installations' },
+    { id: 'wall',        name: 'Wall Specialists',          emoji: '🧱', description: 'Plastering, drywall & surface finishes' },
+    { id: 'glass',       name: 'Glass Works',               emoji: '🪟', description: 'Windows, doors, glazing & replacements' },
+    { id: 'woodwork',    name: 'Wood Work',                 emoji: '🪵', description: 'Carpentry, furniture & custom woodwork' },
+    { id: 'painting',    name: 'Painting & Decorating',     emoji: '🏠', description: 'Interior/exterior painting, wallpapering & decorating' },
+    { id: 'hvac',        name: 'HVAC & Climate Control',    emoji: '❄️',  description: 'AC installation, heating systems & ventilation' },
+    { id: 'locksmith',   name: 'Locksmith & Security',      emoji: '🔒', description: 'Lock fitting, key cutting & security systems' },
+  ];
+  let SERVICES = [...FALLBACK_SERVICES]; // immediately populated — no blank grid
+
+  // Render landing services right now (synchronously) before any async ops
+  (function renderFallbackNow() {
+    const el = document.getElementById('land-services-grid');
+    if (el) el.innerHTML = SERVICES.map(s => `
+      <div class="land-svc-card">
+        <span class="land-svc-emoji">${s.emoji}</span>
+        <h3>${s.name}</h3>
+        <p>${s.description}</p>
+      </div>`).join('');
+  })();
 
   async function loadServices() {
-    const { data } = await sb.from('services').select('*').order('name');
-    if (data && data.length) {
-      SERVICES = data;
-      renderLandingServices();
-    }
+    try {
+      const { data, error } = await withTimeout(
+        sb.from('services').select('*').order('name'), 8000
+      );
+      if (!error && data && data.length) {
+        SERVICES = data;
+        renderLandingServices();
+        // Also refresh the in-app services grid if the user is already logged in
+        const grid = document.getElementById('services-grid');
+        if (grid && grid.children.length) renderServices();
+      }
+    } catch (e) { /* keep fallback already rendered */ }
   }
 
   function renderLandingServices() {
@@ -396,18 +533,45 @@
   ══════════════════════════════════════════ */
 
   async function fetchCustomerProfile() {
-    const { data } = await sb
-      .from('customers')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      .maybeSingle();
+    const { data } = await withTimeout(
+      sb.from('customers').select('*').eq('user_id', currentUser.id).maybeSingle(),
+      8000
+    );
     customerProfile = data ?? null;
   }
 
-  // onAuthStateChange can fire INITIAL_SESSION with null before localStorage is read —
-  // use getSession() to reliably restore the session on load (same pattern as vendor.html).
+  async function ensureCustomerProfile() {
+    if (customerProfile) return true;
+    try { await fetchCustomerProfile(); } catch (e) { customerProfile = null; }
+    if (customerProfile) return true;
+    try {
+      const meta     = currentUser.user_metadata || {};
+      const fullName = ((meta.first_name || '') + ' ' + (meta.last_name || '')).trim()
+                       || currentUser.email.split('@')[0];
+      const { data, error } = await withTimeout(
+        sb.from('customers').insert({
+          user_id: currentUser.id,
+          name:    fullName,
+          email:   currentUser.email,
+        }).select().single(),
+        8000
+      );
+      if (error) return false;
+      customerProfile = data;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Handle all auth state changes. INITIAL_SESSION restores the session on page
+  // load/refresh from localStorage (no network call needed for a non-expired token).
+  // TOKEN_REFRESHED silently updates the token — don't reset the UI/view for that.
   sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'INITIAL_SESSION') return; // handled by initAuth() below
+    if (event === 'TOKEN_REFRESHED') {
+      currentUser = session?.user ?? null; // keep reference fresh, no UI reset
+      return;
+    }
     currentUser = session?.user ?? null;
     try {
       if (currentUser) await fetchCustomerProfile();
@@ -420,12 +584,7 @@
   });
 
   (async function initAuth() {
-    await loadServices();
-    const { data: { session } } = await sb.auth.getSession();
-    currentUser = session?.user ?? null;
-    if (currentUser) await fetchCustomerProfile();
-    applyAuthState();
-    if (currentUser) initBooking();
+    loadServices(); // fire-and-forget — INITIAL_SESSION above handles auth restore
   })();
 
   function applyAuthState() {
@@ -435,7 +594,8 @@
     document.getElementById('user-menu').style.display        = loggedIn ? ''     : 'none';
     document.getElementById('landing-page').style.display     = loggedIn ? 'none' : '';
     document.getElementById('booking-app').style.display      = loggedIn ? ''     : 'none';
-    document.getElementById('my-bookings-page').style.display = 'none'; // always reset on auth change
+    document.getElementById('my-bookings-page').style.display      = 'none'; // always reset on auth change
+    document.getElementById('customer-profile-page').style.display = 'none';
 
     if (loggedIn) {
       // Prefer dedicated customers table; fall back to auth user_metadata for new sessions
@@ -460,8 +620,8 @@
   }
 
   async function logout() {
+    clearAllTimers();
     await sb.auth.signOut();
-    // onAuthStateChange fires and calls applyAuthState() which hides booking-app
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -486,10 +646,18 @@
     btn.disabled = true;
     document.getElementById('li-error').textContent = '';
 
-    const { data, error } = await sb.auth.signInWithPassword({
-      email:    document.getElementById('li-email').value.trim(),
-      password: document.getElementById('li-pass').value,
-    });
+    let data, error;
+    try {
+      ({ data, error } = await withTimeout(sb.auth.signInWithPassword({
+        email:    document.getElementById('li-email').value.trim(),
+        password: document.getElementById('li-pass').value,
+      }), 15000));
+    } catch (e) {
+      document.getElementById('li-error').textContent = e.message || 'Login failed. Please check your connection and try again.';
+      btn.textContent = 'Log In';
+      btn.disabled = false;
+      return;
+    }
 
     btn.textContent = 'Log In';
     btn.disabled = false;
@@ -531,20 +699,35 @@
 
     const email = document.getElementById('su-email').value.trim();
 
-    const { data, error } = await sb.auth.signUp({
-      email,
-      password: document.getElementById('su-pass').value,
-      options:  { data: {
-        first_name: document.getElementById('su-fname').value.trim(),
-        last_name:  document.getElementById('su-lname').value.trim(),
-      }},
-    });
+    let data, error;
+    try {
+      ({ data, error } = await withTimeout(sb.auth.signUp({
+        email,
+        password: document.getElementById('su-pass').value,
+        options:  { data: {
+          first_name: document.getElementById('su-fname').value.trim(),
+          last_name:  document.getElementById('su-lname').value.trim(),
+        }},
+      }), 15000));
+    } catch (e) {
+      document.getElementById('su-error').textContent = e.message || 'Sign up failed. Please check your connection and try again.';
+      btn.textContent = 'Create Account';
+      btn.disabled = false;
+      return;
+    }
 
     btn.textContent = 'Create Account';
     btn.disabled = false;
 
     if (error) {
       document.getElementById('su-error').textContent = error.message;
+      return;
+    }
+
+    // Supabase silently returns no session + empty identities when email already exists
+    if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+      document.getElementById('su-error').textContent =
+        'An account with this email already exists. Please log in instead.';
       return;
     }
 
@@ -616,10 +799,98 @@
      VIEW SWITCHING
   ══════════════════════════════════════════ */
   function showView(view) {
-    document.getElementById('booking-app').style.display      = view === 'booking'     ? '' : 'none';
-    document.getElementById('my-bookings-page').style.display = view === 'my-bookings' ? '' : 'none';
+    document.getElementById('booking-app').style.display          = view === 'booking'     ? '' : 'none';
+    document.getElementById('my-bookings-page').style.display     = view === 'my-bookings' ? '' : 'none';
+    document.getElementById('customer-profile-page').style.display = view === 'profile'    ? '' : 'none';
     if (view === 'my-bookings') loadMyBookings();
+    if (view === 'profile')     loadCustomerProfilePage();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ══════════════════════════════════════════
+     CUSTOMER PROFILE PAGE
+  ══════════════════════════════════════════ */
+  async function loadCustomerProfilePage() {
+    if (!currentUser) return;
+
+    const name     = customerProfile?.name || currentUser.user_metadata?.first_name || currentUser.email.split('@')[0];
+    const nameParts = name.split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName  = nameParts.slice(1).join(' ') || '';
+    const initials  = ((firstName[0] || '') + (lastName[0] || '')).toUpperCase().slice(0, 2) || name[0].toUpperCase();
+
+    document.getElementById('cp-avatar').textContent = initials;
+    document.getElementById('cp-name').textContent   = customerProfile?.name || name;
+    document.getElementById('cp-email').textContent  = customerProfile?.email || currentUser.email;
+    document.getElementById('cp-phone').textContent  = customerProfile?.phone || '—';
+
+    const since = new Date(currentUser.created_at || customerProfile?.created_at || Date.now());
+    const sinceStr = since.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('cp-since').textContent       = sinceStr;
+    document.getElementById('cp-member-since').textContent = 'Member since ' + since.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+
+    document.getElementById('cp-fname').value     = firstName;
+    document.getElementById('cp-lname').value     = lastName;
+    document.getElementById('cp-inp-phone').value = customerProfile?.phone || '';
+    document.getElementById('cp-error').textContent = '';
+    document.getElementById('cp-success').style.display = 'none';
+
+    // fetch booking stats
+    try {
+      const { data: bookings } = await withTimeout(
+        sb.from('bookings').select('status').eq('customer_id', customerProfile?.id || ''),
+        8000
+      );
+      if (bookings) {
+        document.getElementById('cp-stat-total').textContent      = bookings.length;
+        document.getElementById('cp-stat-scheduled').textContent  = bookings.filter(b => b.status === 'Scheduled').length;
+        document.getElementById('cp-stat-inprogress').textContent = bookings.filter(b => b.status === 'In Progress').length;
+        document.getElementById('cp-stat-completed').textContent  = bookings.filter(b => b.status === 'Completed').length;
+      }
+    } catch (e) {
+      ['cp-stat-total','cp-stat-scheduled','cp-stat-inprogress','cp-stat-completed'].forEach(id => {
+        document.getElementById(id).textContent = '—';
+      });
+    }
+  }
+
+  async function saveCustomerProfile() {
+    let ok = true;
+    function chk(gId, iId, test) {
+      const val = document.getElementById(iId).value.trim();
+      document.getElementById(gId).classList.toggle('error', !test(val));
+      if (!test(val)) ok = false;
+    }
+    chk('cp-fg-fname', 'cp-fname', v => v.length >= 1);
+    chk('cp-fg-lname', 'cp-lname', v => v.length >= 1);
+    chk('cp-fg-phone', 'cp-inp-phone', v => /^[\d\s\+\-\(\)]{7,}$/.test(v));
+    if (!ok) return;
+
+    const firstName = document.getElementById('cp-fname').value.trim();
+    const lastName  = document.getElementById('cp-lname').value.trim();
+    const fullName  = (firstName + ' ' + lastName).trim();
+    const phone     = document.getElementById('cp-inp-phone').value.trim();
+
+    const btn = document.getElementById('cp-save-btn');
+    btn.textContent = 'Saving…'; btn.disabled = true;
+    document.getElementById('cp-error').textContent = '';
+    document.getElementById('cp-success').style.display = 'none';
+
+    try {
+      const { data, error } = await withTimeout(
+        sb.from('customers').update({ name: fullName, phone }).eq('id', customerProfile.id).select().single(),
+        15000
+      );
+      if (error) throw error;
+      customerProfile = data;
+      applyAuthState();
+      loadCustomerProfilePage();
+      document.getElementById('cp-success').style.display = '';
+    } catch (e) {
+      document.getElementById('cp-error').textContent = e.message || 'Failed to save. Please try again.';
+    } finally {
+      btn.textContent = 'Save Changes'; btn.disabled = false;
+    }
   }
 
   /* ══════════════════════════════════════════
@@ -741,12 +1012,14 @@
   /* ── Submit booking → saved to Supabase ── */
   async function submitBooking() {
     if (!validateForm()) return;
-    if (!customerProfile) {
-      alert('Your customer profile could not be loaded. Please log out and log in again.');
+    const profileReady = await ensureCustomerProfile();
+    if (!profileReady) {
+      alert('Could not load your customer profile. Please log out and log in again.');
       return;
     }
 
     const svc   = SERVICES.find(s => s.id === state.service);
+    if (!svc) { alert('Selected service not found. Please go back and choose a service again.'); return; }
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let ref = 'SVK-';
     for (let i = 0; i < 6; i++) ref += chars[Math.floor(Math.random() * chars.length)];
@@ -762,22 +1035,29 @@
     btn.textContent = 'Saving…';
     btn.disabled = true;
 
-    const { error } = await sb.from('bookings').insert({
-      customer_id:   customerProfile.id,
-      ref_number:    ref,
-      service_id:    svc.id,
-      service_name:  svc.name,
-      service_emoji: svc.emoji,
-      date:          state.date.toISOString().split('T')[0],
-      time:          state.time,
-      name, phone, email, address, notes,
-    });
+    let insertError;
+    try {
+      const { error } = await withTimeout(sb.from('bookings').insert({
+        customer_id:   customerProfile.id,
+        ref_number:    ref,
+        service_id:    svc.id,
+        service_name:  svc.name,
+        service_emoji: svc.emoji,
+        date:          state.date.toISOString().split('T')[0],
+        time:          state.time,
+        name, phone, email, address, notes,
+      }));
+      insertError = error;
+    } catch (e) {
+      alert('Could not save booking. Please check your connection and try again.');
+      return;
+    } finally {
+      btn.textContent = 'Confirm Booking →';
+      btn.disabled = false;
+    }
 
-    btn.textContent = 'Confirm Booking →';
-    btn.disabled = false;
-
-    if (error) {
-      alert('Could not save booking: ' + error.message);
+    if (insertError) {
+      alert('Could not save booking: ' + insertError.message);
       return;
     }
 
@@ -836,14 +1116,21 @@
     'Completed':   { cls: 'status-completed',   label: 'Completed'   },
   };
 
+  async function refreshMyBookings() {
+    const btn = document.getElementById('mbp-refresh-btn');
+    btn.textContent = '↻ Refreshing…'; btn.disabled = true;
+    await loadMyBookings();
+    btn.textContent = '↻ Refresh'; btn.disabled = false;
+  }
+
   async function loadMyBookings() {
     document.getElementById('mbp-list').innerHTML =
       '<div class="bookings-loading">Loading your bookings…</div>';
 
-    const { data, error } = await sb
-      .from('bookings')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data, error } = await withTimeout(
+      sb.from('bookings').select('*').order('created_at', { ascending: false }),
+      15000
+    );
 
     if (error) {
       document.getElementById('mbp-list').innerHTML =
@@ -877,8 +1164,8 @@
 
   function setActiveFilterTab(filter) {
     document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    const tabId = filter === 'all' ? 'ft-all' : 'ft-' + filter;
-    const tab = document.getElementById(tabId);
+    const idMap = { 'all': 'ft-all', 'Scheduled': 'ft-Scheduled', 'In Progress': 'ft-inprogress', 'Completed': 'ft-Completed' };
+    const tab = document.getElementById(idMap[filter] || ('ft-' + filter));
     if (tab) tab.classList.add('active');
   }
 
@@ -998,7 +1285,10 @@
     if (!val) return;
     const btn = document.getElementById('rating-btn-' + bookingId);
     if (btn) { btn.textContent = 'Submitting…'; btn.disabled = true; }
-    const { error } = await sb.from('bookings').update({ rating: val }).eq('id', bookingId);
+    const { error } = await withTimeout(
+      sb.from('bookings').update({ rating: val }).eq('id', bookingId),
+      10000
+    );
     if (error) {
       if (btn) { btn.textContent = 'Submit Rating'; btn.disabled = false; }
       return;
