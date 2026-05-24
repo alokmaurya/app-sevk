@@ -363,7 +363,7 @@
     ]);
   }
 
-  /* ══ App Data (loaded from DB) ══ */
+  /* ══ App Data — fallback pre-loaded so page is never blank ══ */
   const FALLBACK_SERVICES = [
     { id: 'electrician', name: 'Electrician',              emoji: '⚡',  description: 'Wiring, panels, fault finding & repairs' },
     { id: 'plumber',     name: 'Plumber',                  emoji: '🔧', description: 'Leaks, pipe bursts & full installations' },
@@ -374,20 +374,32 @@
     { id: 'hvac',        name: 'HVAC & Climate Control',    emoji: '❄️',  description: 'AC installation, heating systems & ventilation' },
     { id: 'locksmith',   name: 'Locksmith & Security',      emoji: '🔒', description: 'Lock fitting, key cutting & security systems' },
   ];
-  let SERVICES = [];
+  let SERVICES = [...FALLBACK_SERVICES]; // immediately populated — no blank grid
+
+  // Render landing services right now (synchronously) before any async ops
+  (function renderFallbackNow() {
+    const el = document.getElementById('land-services-grid');
+    if (el) el.innerHTML = SERVICES.map(s => `
+      <div class="land-svc-card">
+        <span class="land-svc-emoji">${s.emoji}</span>
+        <h3>${s.name}</h3>
+        <p>${s.description}</p>
+      </div>`).join('');
+  })();
 
   async function loadServices() {
     try {
-      const { data, error } = await sb.from('services').select('*').order('name');
+      const { data, error } = await withTimeout(
+        sb.from('services').select('*').order('name'), 8000
+      );
       if (!error && data && data.length) {
         SERVICES = data;
-      } else {
-        SERVICES = [...FALLBACK_SERVICES];
+        renderLandingServices();
+        // Also refresh the in-app services grid if the user is already logged in
+        const grid = document.getElementById('services-grid');
+        if (grid && grid.children.length) renderServices();
       }
-    } catch (e) {
-      SERVICES = [...FALLBACK_SERVICES];
-    }
-    renderLandingServices();
+    } catch (e) { /* keep fallback already rendered */ }
   }
 
   function renderLandingServices() {
@@ -421,29 +433,29 @@
   ══════════════════════════════════════════ */
 
   async function fetchCustomerProfile() {
-    const { data } = await sb
-      .from('customers')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      .maybeSingle();
+    const { data } = await withTimeout(
+      sb.from('customers').select('*').eq('user_id', currentUser.id).maybeSingle(),
+      8000
+    );
     customerProfile = data ?? null;
   }
 
   async function ensureCustomerProfile() {
     if (customerProfile) return true;
-    // Try fetching once more in case it was missed during login
     try { await fetchCustomerProfile(); } catch (e) { customerProfile = null; }
     if (customerProfile) return true;
-    // No record exists — auto-create one from auth user metadata
     try {
-      const meta      = currentUser.user_metadata || {};
-      const fullName  = ((meta.first_name || '') + ' ' + (meta.last_name || '')).trim()
-                        || currentUser.email.split('@')[0];
-      const { data, error } = await sb.from('customers').insert({
-        user_id: currentUser.id,
-        name:    fullName,
-        email:   currentUser.email,
-      }).select().single();
+      const meta     = currentUser.user_metadata || {};
+      const fullName = ((meta.first_name || '') + ' ' + (meta.last_name || '')).trim()
+                       || currentUser.email.split('@')[0];
+      const { data, error } = await withTimeout(
+        sb.from('customers').insert({
+          user_id: currentUser.id,
+          name:    fullName,
+          email:   currentUser.email,
+        }).select().single(),
+        8000
+      );
       if (error) return false;
       customerProfile = data;
       return true;
@@ -468,8 +480,16 @@
   });
 
   (async function initAuth() {
-    await loadServices();
-    const { data: { session } } = await sb.auth.getSession();
+    // Services and auth session are fetched in parallel — neither blocks the other.
+    // Fallback services are already rendered synchronously above.
+    loadServices(); // fire-and-forget (updates grid when DB responds)
+
+    let session = null;
+    try {
+      const result = await withTimeout(sb.auth.getSession(), 10000);
+      session = result.data.session;
+    } catch (e) { /* stay logged-out on timeout */ }
+
     currentUser = session?.user ?? null;
     try {
       if (currentUser) await fetchCustomerProfile();
@@ -540,12 +560,12 @@
 
     let data, error;
     try {
-      ({ data, error } = await sb.auth.signInWithPassword({
+      ({ data, error } = await withTimeout(sb.auth.signInWithPassword({
         email:    document.getElementById('li-email').value.trim(),
         password: document.getElementById('li-pass').value,
-      }));
+      }), 15000));
     } catch (e) {
-      document.getElementById('li-error').textContent = 'Login failed. Please check your connection and try again.';
+      document.getElementById('li-error').textContent = e.message || 'Login failed. Please check your connection and try again.';
       btn.textContent = 'Log In';
       btn.disabled = false;
       return;
@@ -593,16 +613,16 @@
 
     let data, error;
     try {
-      ({ data, error } = await sb.auth.signUp({
+      ({ data, error } = await withTimeout(sb.auth.signUp({
         email,
         password: document.getElementById('su-pass').value,
         options:  { data: {
           first_name: document.getElementById('su-fname').value.trim(),
           last_name:  document.getElementById('su-lname').value.trim(),
         }},
-      }));
+      }), 15000));
     } catch (e) {
-      document.getElementById('su-error').textContent = 'Sign up failed. Please check your connection and try again.';
+      document.getElementById('su-error').textContent = e.message || 'Sign up failed. Please check your connection and try again.';
       btn.textContent = 'Create Account';
       btn.disabled = false;
       return;
@@ -924,10 +944,10 @@
     document.getElementById('mbp-list').innerHTML =
       '<div class="bookings-loading">Loading your bookings…</div>';
 
-    const { data, error } = await sb
-      .from('bookings')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data, error } = await withTimeout(
+      sb.from('bookings').select('*').order('created_at', { ascending: false }),
+      15000
+    );
 
     if (error) {
       document.getElementById('mbp-list').innerHTML =
@@ -1082,7 +1102,10 @@
     if (!val) return;
     const btn = document.getElementById('rating-btn-' + bookingId);
     if (btn) { btn.textContent = 'Submitting…'; btn.disabled = true; }
-    const { error } = await sb.from('bookings').update({ rating: val }).eq('id', bookingId);
+    const { error } = await withTimeout(
+      sb.from('bookings').update({ rating: val }).eq('id', bookingId),
+      10000
+    );
     if (error) {
       if (btn) { btn.textContent = 'Submit Rating'; btn.disabled = false; }
       return;
