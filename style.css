@@ -1226,3 +1226,256 @@ main {
   .header-tag { display: none; }
   .user-name  { display: none; }
 }
+
+/* ══════════════════════════════════════════
+   GAMES
+══════════════════════════════════════════ */
+
+.btn-games-nav {
+  background: transparent;
+  color: var(--white);
+  border: 2px solid #444;
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  white-space: nowrap;
+}
+.btn-games-nav:hover { border-color: #888; }
+
+#games-page {
+  background: var(--grey-light);
+  min-height: calc(100vh - 64px);
+}
+
+/* Hub */
+.games-hub-wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+}
+
+.games-hero {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+.games-hero h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--black);
+  margin-bottom: 0.5rem;
+}
+.games-hero p { color: var(--grey-text); }
+
+.games-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.game-hub-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  border: 2px solid transparent;
+}
+.game-hub-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+  border-color: var(--red);
+}
+.ghc-icon { font-size: 3rem; margin-bottom: 0.75rem; line-height: 1; }
+.ghc-name { font-size: 1.15rem; font-weight: 700; color: var(--black); margin-bottom: 0.4rem; }
+.ghc-desc { font-size: 0.875rem; color: var(--grey-text); line-height: 1.5; margin-bottom: 1.25rem; }
+.ghc-btn {
+  display: inline-block;
+  background: var(--red);
+  color: var(--white);
+  border: none;
+  padding: 0.45rem 1.4rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.ghc-btn:hover { background: var(--red-dark); }
+.games-back-row { text-align: center; }
+
+/* Individual game view */
+.game-view-wrap {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+.game-back-btn {
+  background: none;
+  border: none;
+  color: var(--grey-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0 1.5rem;
+  display: block;
+  transition: color 0.15s;
+}
+.game-back-btn:hover { color: var(--black); }
+.game-title { font-size: 1.6rem; font-weight: 800; color: var(--black); margin-bottom: 0.2rem; }
+.game-sub   { color: var(--grey-text); font-size: 0.9rem; margin-bottom: 0.75rem; }
+.game-meta  { color: var(--grey-text); font-size: 1rem; margin-bottom: 1rem; }
+.game-hint  { text-align: center; color: #999; font-size: 0.8rem; margin-top: 0.6rem; }
+
+/* ── Snake ── */
+.snake-canvas-wrap {
+  position: relative;
+  max-width: 400px;
+  margin: 0 auto;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: #111;
+}
+#snake-canvas { display: block; width: 100%; }
+.snake-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.82);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--white);
+}
+.snake-overlay p { font-size: 1.2rem; font-weight: 700; }
+.snake-dpad {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 1rem;
+}
+.dpad-row { display: flex; gap: 4px; }
+.dpad-btn {
+  width: 54px; height: 54px;
+  background: var(--white);
+  border: 2px solid var(--grey-mid);
+  border-radius: 10px;
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background 0.1s;
+}
+.dpad-btn:active { background: var(--grey-mid); }
+.dpad-spacer { width: 54px; height: 54px; }
+@media (hover: none) { .snake-dpad { display: flex; } }
+
+/* ── Tic-Tac-Toe ── */
+.ttt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 80px);
+  gap: 8px;
+  margin: 1.25rem auto;
+  width: fit-content;
+}
+.ttt-cell {
+  width: 80px; height: 80px;
+  background: var(--white);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 900;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s, opacity 0.3s;
+}
+.ttt-cell:hover:not(.ttt-x):not(.ttt-o) { background: var(--grey-light); }
+.ttt-cell.ttt-x { color: var(--red); cursor: default; }
+.ttt-cell.ttt-o { color: #3b82f6; cursor: default; }
+.ttt-result {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--black);
+  padding: 0.75rem 1.5rem;
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin: 0.5rem auto;
+  max-width: 260px;
+}
+.ttt-actions { text-align: center; margin-top: 1rem; }
+
+/* ── Memory Match ── */
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  max-width: 400px;
+  margin: 1.25rem auto;
+}
+.mem-card { aspect-ratio: 1; cursor: pointer; perspective: 600px; }
+.mem-card-inner {
+  position: relative;
+  width: 100%; height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease;
+}
+.mem-card.flipped .mem-card-inner,
+.mem-card.matched .mem-card-inner { transform: rotateY(180deg); }
+.mem-card-front,
+.mem-card-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.mem-card-front {
+  background: var(--black);
+  color: var(--white);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.mem-card-back {
+  background: var(--white);
+  font-size: 1.8rem;
+  transform: rotateY(180deg);
+}
+.mem-card.matched .mem-card-back { background: #d1fae5; }
+.memory-win {
+  text-align: center;
+  padding: 1.25rem;
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-top: 1rem;
+}
+.memory-win p { font-size: 1.05rem; font-weight: 600; color: var(--black); margin-bottom: 1rem; }
+
+@media (max-width: 480px) {
+  .ttt-grid { grid-template-columns: repeat(3, 68px); }
+  .ttt-cell { width: 68px; height: 68px; font-size: 1.6rem; }
+  .games-hero h1 { font-size: 1.6rem; }
+  .mem-card-front { font-size: 1rem; }
+  .mem-card-back  { font-size: 1.4rem; }
+  .game-view-wrap { padding: 1.5rem 1rem 3rem; }
+}
