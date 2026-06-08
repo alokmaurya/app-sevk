@@ -1353,17 +1353,22 @@ main {
 
 .btn-games-nav {
   background: transparent;
-  color: var(--white);
-  border: 2px solid #444;
-  padding: 0.4rem 1rem;
-  border-radius: 8px;
-  font-size: 0.85rem;
+  color: #d0d0d0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.25rem 0.1rem;
+  font-size: 0.88rem;
   font-weight: 600;
+  letter-spacing: 0.6px;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: color 0.2s, border-color 0.2s;
   white-space: nowrap;
+  text-transform: uppercase;
 }
-.btn-games-nav:hover { border-color: #888; }
+.btn-games-nav:hover {
+  color: var(--white);
+  border-bottom-color: var(--red);
+}
 
 #games-page {
   background: var(--grey-light);
