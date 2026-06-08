@@ -103,12 +103,7 @@
     <div class="v-land-container">
       <h2 class="v-section-title" style="color:#fff">We're Looking For</h2>
       <p class="v-section-sub" style="color:#aaa">Experienced tradespeople in these areas.</p>
-      <div class="v-trades">
-        <div class="v-trade-card"><span>⚡</span><strong>Electricians</strong><p>Wiring, panels &amp; repairs</p></div>
-        <div class="v-trade-card"><span>🔧</span><strong>Plumbers</strong><p>Leaks, pipes &amp; installations</p></div>
-        <div class="v-trade-card"><span>🧱</span><strong>Wall Specialists</strong><p>Plastering, drywall &amp; finishes</p></div>
-        <div class="v-trade-card"><span>🪟</span><strong>Glass Works</strong><p>Windows, doors &amp; glazing</p></div>
-      </div>
+      <div class="v-trades" id="v-trades-grid"></div>
     </div>
   </section>
 
@@ -129,7 +124,7 @@
       </div>
       <div class="v-footer-links">
         <a href="index.html">← Customer Site</a>
-        <span>&copy; 2026 Sevk. MIT License.</span>
+        <span>&copy; 2026 Sevk. All rights reserved.&nbsp;&nbsp;&middot;&nbsp;&nbsp;alok.maurya</span>
       </div>
     </div>
   </footer>
@@ -205,10 +200,6 @@
           <label for="rg-service">Trade / Service</label>
           <select id="rg-service">
             <option value="">— Select your service —</option>
-            <option value="electrician" data-emoji="⚡" data-name="Electrician">⚡ Electrician</option>
-            <option value="plumber"     data-emoji="🔧" data-name="Plumber">🔧 Plumber</option>
-            <option value="wall"        data-emoji="🧱" data-name="Wall Specialists">🧱 Wall Specialists</option>
-            <option value="glass"       data-emoji="🪟" data-name="Glass Works">🪟 Glass Works</option>
           </select>
           <span class="field-error">Please select your trade.</span>
         </div>
@@ -344,6 +335,10 @@
           <span class="profile-row-label">Member Since</span>
           <span class="profile-row-value" id="prof-since"></span>
         </div>
+        <div class="profile-row">
+          <span class="profile-row-label">Avg Rating</span>
+          <span class="profile-row-value" id="prof-avg-rating">—</span>
+        </div>
       </div>
 
       <div class="profile-edit-section">
@@ -405,10 +400,71 @@
     }
   }
 
+  const FALLBACK_SERVICES = [
+    { id: 'electrician', name: 'Electrician',              emoji: '⚡',  description: 'Wiring, panels, fault finding & repairs' },
+    { id: 'plumber',     name: 'Plumber',                  emoji: '🔧', description: 'Leaks, pipe bursts & full installations' },
+    { id: 'wall',        name: 'Wall Specialists',          emoji: '🧱', description: 'Plastering, drywall & surface finishes' },
+    { id: 'glass',       name: 'Glass Works',               emoji: '🪟', description: 'Windows, doors, glazing & replacements' },
+    { id: 'woodwork',    name: 'Wood Work',                 emoji: '🪵', description: 'Carpentry, furniture & custom woodwork' },
+    { id: 'painting',    name: 'Painting & Decorating',     emoji: '🏠', description: 'Interior/exterior painting, wallpapering & decorating' },
+    { id: 'hvac',        name: 'HVAC & Climate Control',    emoji: '❄️',  description: 'AC installation, heating systems & ventilation' },
+    { id: 'locksmith',   name: 'Locksmith & Security',      emoji: '🔒', description: 'Lock fitting, key cutting & security systems' },
+  ];
+
+  let SERVICES      = [...FALLBACK_SERVICES]; // pre-populated — dropdown is never empty
   let currentUser   = null;
   let vendorProfile = null;
   let availableJobs = [];
   let myJobs        = [];
+
+  // Render trade cards and service dropdown immediately (synchronously)
+  (function renderFallbackNow() {
+    const grid = document.getElementById('v-trades-grid');
+    if (grid) grid.innerHTML = SERVICES.map(s => `
+      <div class="v-trade-card">
+        <span>${s.emoji}</span>
+        <strong>${s.name}</strong>
+        <p>${s.description}</p>
+      </div>`).join('');
+    const sel = document.getElementById('rg-service');
+    if (sel) sel.innerHTML = '<option value="">— Select your service —</option>' +
+      SERVICES.map(s =>
+        `<option value="${s.id}" data-emoji="${s.emoji}" data-name="${s.name}">${s.emoji} ${s.name}</option>`
+      ).join('');
+  })();
+
+  async function loadServices() {
+    try {
+      const { data, error } = await withTimeout(
+        sb.from('services').select('*').order('name'), 8000
+      );
+      if (!error && data && data.length) {
+        SERVICES = data;
+        renderTradeCards();
+        renderServiceDropdown();
+      }
+    } catch (e) { /* keep fallback already rendered */ }
+  }
+  function renderTradeCards() {
+    const el = document.getElementById('v-trades-grid');
+    if (el) el.innerHTML = SERVICES.map(s => `
+      <div class="v-trade-card">
+        <span>${s.emoji}</span>
+        <strong>${s.name}</strong>
+        <p>${s.description}</p>
+      </div>`).join('');
+  }
+
+  function renderServiceDropdown() {
+    const sel = document.getElementById('rg-service');
+    if (!sel) return;
+    const current = sel.value; // preserve any existing selection
+    sel.innerHTML = '<option value="">— Select your service —</option>' +
+      SERVICES.map(s =>
+        `<option value="${s.id}" data-emoji="${s.emoji}" data-name="${s.name}">${s.emoji} ${s.name}</option>`
+      ).join('');
+    if (current) sel.value = current;
+  }
   let refreshTimer  = null;
 
   const STATUS_META = {
@@ -426,28 +482,39 @@
       const btn = document.getElementById('nav-btn-' + p);
       if (btn) btn.classList.toggle('active', p === name);
     });
+    if (name === 'register') renderServiceDropdown(); // always refresh when page is shown
     if (name === 'profile'   && vendorProfile) loadProfilePage();
     if (name === 'dashboard' && vendorProfile) { switchDashTab('myjobs'); loadDashboard(); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  sb.auth.onAuthStateChange(async (_event, session) => {
+  // Handle all auth state changes. INITIAL_SESSION restores the session on page
+  // load/refresh from localStorage (no network call needed for a non-expired token).
+  // TOKEN_REFRESHED silently updates the token — don't reset the UI/view for that.
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'TOKEN_REFRESHED') {
+      currentUser = session?.user ?? null; // keep reference fresh, no UI reset
+      return;
+    }
     currentUser = session?.user ?? null;
-    if (currentUser) {
-      await fetchVendorProfile();
-    } else {
+    try {
+      if (currentUser) await fetchVendorProfile();
+      else { vendorProfile = null; stopAutoRefresh(); }
+    } catch (e) {
       vendorProfile = null;
-      stopAutoRefresh();
     }
     applyAuthState();
   });
 
+  (async function initAuth() {
+    loadServices(); // fire-and-forget — INITIAL_SESSION above handles auth restore
+  })();
+
   async function fetchVendorProfile() {
-    const { data, error } = await sb
-      .from('vendors')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      .maybeSingle();
+    const { data, error } = await withTimeout(
+      sb.from('vendors').select('*').eq('user_id', currentUser.id).maybeSingle(),
+      8000
+    );
     vendorProfile = error ? null : data;
   }
 
@@ -487,6 +554,7 @@
   }
 
   async function vLogout() {
+    clearAllTimers();
     stopAutoRefresh();
     await sb.auth.signOut();
     vendorProfile = null;
@@ -519,7 +587,7 @@
     btn.textContent = 'Logging in…';
 
     try {
-      const { error } = await withTimeout(sb.auth.signInWithPassword({
+      const { data: loginData, error } = await withTimeout(sb.auth.signInWithPassword({
         email:    document.getElementById('li-email').value.trim(),
         password: document.getElementById('li-pass').value,
       }));
@@ -530,6 +598,10 @@
             : error.message;
         return;
       }
+      // Directly apply auth state — don't rely solely on onAuthStateChange timing
+      currentUser = loginData.user;
+      try { await fetchVendorProfile(); } catch (ep) { vendorProfile = null; }
+      applyAuthState();
     } catch (e) {
       document.getElementById('li-error').textContent =
         e.message || 'Connection error. Check your internet and try again.';
@@ -598,6 +670,13 @@
           return;
         }
 
+        // Supabase returns no session + empty identities when email already exists
+        if (authData.user && (!authData.user.identities || authData.user.identities.length === 0)) {
+          document.getElementById('rg-error').textContent =
+            'An account with this email already exists. Please log in instead.';
+          return;
+        }
+
         if (!authData.session) {
           document.getElementById('reg-form-body').style.display = 'none';
           document.getElementById('reg-success-email').textContent = email;
@@ -649,7 +728,7 @@
     showPage('login');
   }
 
-  function loadProfilePage() {
+  async function loadProfilePage() {
     if (!vendorProfile) return;
     const nameParts = vendorProfile.name.split(' ');
     const firstName = nameParts[0] || '';
@@ -672,6 +751,26 @@
     document.getElementById('ed-phone').value = vendorProfile.phone;
     document.getElementById('ed-error').textContent = '';
     document.getElementById('ed-success').style.display = 'none';
+
+    const ratingEl = document.getElementById('prof-avg-rating');
+    if (ratingEl) {
+      const { data: ratedJobs } = await sb
+        .from('bookings')
+        .select('rating')
+        .eq('vendor_id', vendorProfile.id)
+        .eq('status', 'Completed')
+        .not('rating', 'is', null);
+
+      if (ratedJobs && ratedJobs.length > 0) {
+        const avg = ratedJobs.reduce((sum, j) => sum + j.rating, 0) / ratedJobs.length;
+        ratingEl.innerHTML = `
+          <span class="prof-rating-stars">${renderStars(Math.round(avg))}</span>
+          <span class="prof-rating-score">${avg.toFixed(1)}/5</span>
+          <span class="prof-rating-count">(${ratedJobs.length} rating${ratedJobs.length > 1 ? 's' : ''})</span>`;
+      } else {
+        ratingEl.textContent = 'No ratings yet';
+      }
+    }
   }
 
   async function saveProfile() {
@@ -729,7 +828,7 @@
 
   function startAutoRefresh() {
     stopAutoRefresh();
-    refreshTimer = setInterval(() => { if (vendorProfile) loadDashboard(true); }, 60000);
+    refreshTimer = setInterval(() => { if (vendorProfile) loadDashboard(true); }, 3000);
   }
 
   function stopAutoRefresh() {
@@ -753,11 +852,12 @@
         '<div class="vd-loading"><span class="vd-spinner"></span> Loading available jobs…</div>';
     }
 
-    const { data, error } = await sb
-      .from('bookings')
-      .select('*')
-      .eq('service_id', vendorProfile.service_id)
-      .order('date', { ascending: true });
+    const { data, error } = await withTimeout(
+      sb.from('bookings').select('*')
+        .eq('service_id', vendorProfile.service_id)
+        .order('date', { ascending: true }),
+      15000
+    );
 
     if (error) {
       const msg = error.code === '42P01'
@@ -798,7 +898,48 @@
     document.getElementById('vt-available').classList.toggle('active', !isMyJobs);
   }
 
+  /* ── Live Job Timers ── */
+  const activeTimers = {};
+
+  function formatElapsed(startedAt) {
+    const secs = Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000));
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function startTimer(bookingId, startedAt) {
+    if (activeTimers[bookingId]) clearInterval(activeTimers[bookingId]);
+    const tick = () => {
+      const el = document.getElementById('timer-' + bookingId);
+      if (!el) { clearInterval(activeTimers[bookingId]); delete activeTimers[bookingId]; return; }
+      el.textContent = formatElapsed(startedAt);
+    };
+    tick();
+    activeTimers[bookingId] = setInterval(tick, 1000);
+  }
+
+  function clearAllTimers() {
+    Object.keys(activeTimers).forEach(id => { clearInterval(activeTimers[id]); delete activeTimers[id]; });
+  }
+
+  function formatDuration(startedAt, completedAt) {
+    const secs = Math.max(0, Math.floor((new Date(completedAt).getTime() - new Date(startedAt).getTime()) / 1000));
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function renderStars(rating) {
+    return [1,2,3,4,5].map(i =>
+      `<span class="star-display ${i <= rating ? 'filled' : ''}">${i <= rating ? '★' : '☆'}</span>`
+    ).join('');
+  }
+
   function renderMyJobs() {
+    clearAllTimers();
     const list = document.getElementById('myjobs-list');
     if (!myJobs.length) {
       list.innerHTML = `
@@ -810,9 +951,9 @@
         </div>`;
       return;
     }
-    const order = { 'In Progress': 0, 'Scheduled': 1, 'Completed': 2 };
-    const sorted = [...myJobs].sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
+    const sorted = [...myJobs].sort((a, b) => new Date(b.date) - new Date(a.date));
     list.innerHTML = sorted.map(b => buildJobCard(b, 'mine')).join('');
+    myJobs.filter(b => b.status === 'In Progress' && b.started_at).forEach(b => startTimer(b.id, b.started_at));
   }
 
   function renderAvailableJobs() {
@@ -822,11 +963,12 @@
         <div class="vd-empty">
           <div class="vd-empty-icon">🎉</div>
           <p>No new jobs available right now.</p>
-          <p class="vd-empty-sub">Dashboard refreshes every 60 seconds. Click ↻ Refresh to check immediately.</p>
+          <p class="vd-empty-sub">Dashboard refreshes every 3 seconds. Click ↻ Refresh to check immediately.</p>
         </div>`;
       return;
     }
-    list.innerHTML = availableJobs.map(b => buildJobCard(b, 'available')).join('');
+    const sorted = [...availableJobs].sort((a, b) => new Date(b.date) - new Date(a.date));
+    list.innerHTML = sorted.map(b => buildJobCard(b, 'available')).join('');
   }
 
   function buildJobCard(b, type) {
@@ -839,9 +981,21 @@
     if (type === 'available') {
       actionBtn = `<button class="job-action-btn accept" onclick="acceptJob('${b.id}')">✋ Accept Job</button>`;
     } else if (status === 'Scheduled') {
-      actionBtn = `<button class="job-action-btn start" onclick="startJob('${b.id}')">▶ Start Job</button>`;
+      actionBtn = `
+        <div class="otp-verify-row">
+          <input type="text" inputmode="numeric" class="otp-input" id="otp-input-${b.id}"
+            maxlength="4" placeholder="Enter OTP from customer"
+            oninput="checkOtp('${b.id}', '${b.otp}', this.value)">
+          <button class="job-action-btn start" id="start-btn-${b.id}" onclick="startJob('${b.id}')" disabled>▶ Start Job</button>
+        </div>`;
     } else if (status === 'In Progress') {
-      actionBtn = `<button class="job-action-btn complete" onclick="completeJob('${b.id}')">✅ Mark Complete</button>`;
+      actionBtn = `
+        <div class="otp-verify-row">
+          <input type="text" inputmode="numeric" class="otp-input" id="comp-otp-input-${b.id}"
+            maxlength="4" placeholder="Enter completion OTP"
+            oninput="checkCompletionOtp('${b.id}', '${b.completion_otp}', this.value)">
+          <button class="job-action-btn complete" id="complete-btn-${b.id}" onclick="completeJob('${b.id}')" disabled>✅ Mark Complete</button>
+        </div>`;
     }
 
     return `
@@ -862,6 +1016,13 @@
           <div class="job-row"><span class="job-row-icon">📞</span><span>${b.phone}</span></div>
           <div class="job-row"><span class="job-row-icon">📍</span><span>${b.address}</span></div>
           ${b.notes ? `<div class="job-row"><span class="job-row-icon">📝</span><span>${b.notes}</span></div>` : ''}
+          ${status === 'In Progress' && b.started_at ? `<div class="job-timer-row"><span class="job-timer-icon">⏱</span><span>Time elapsed: <strong class="job-timer" id="timer-${b.id}">00:00:00</strong></span></div>` : ''}
+          ${status === 'Completed' && b.started_at && b.completed_at ? `<div class="job-timer-row"><span class="job-timer-icon">✅</span><span>Total time taken: <strong class="job-timer">${formatDuration(b.started_at, b.completed_at)}</strong></span></div>` : ''}
+          ${status === 'Completed' ? `
+            <div class="job-rating-row">
+              <span class="job-rating-label">Customer Rating:</span>
+              ${b.rating ? `<span class="job-rating-stars">${renderStars(b.rating)}</span><span class="job-rating-score">${b.rating}/5</span>` : `<span class="job-rating-none">Not yet rated</span>`}
+            </div>` : ''}
         </div>
         ${actionBtn
           ? `<div class="job-card-footer">${actionBtn}</div>`
@@ -873,9 +1034,11 @@
     const btn = document.querySelector(`#jc-${bookingId} .job-action-btn`);
     if (btn) { btn.textContent = 'Accepting…'; btn.disabled = true; }
 
+    const otp = String(Math.floor(1000 + Math.random() * 9000));
+
     const { error } = await sb
       .from('bookings')
-      .update({ vendor_id: vendorProfile.id, status: 'Scheduled' })
+      .update({ vendor_id: vendorProfile.id, vendor_name: vendorProfile.name, otp, status: 'Scheduled' })
       .eq('id', bookingId)
       .is('vendor_id', null);
 
@@ -889,13 +1052,27 @@
     switchDashTab('myjobs');
   }
 
+  function checkOtp(bookingId, correctOtp, entered) {
+    const btn = document.getElementById('start-btn-' + bookingId);
+    if (btn) btn.disabled = entered.trim() !== correctOtp;
+  }
+
+  function checkCompletionOtp(bookingId, correctOtp, entered) {
+    const btn = document.getElementById('complete-btn-' + bookingId);
+    if (btn) btn.disabled = entered.trim() !== correctOtp;
+  }
+
   async function startJob(bookingId) {
-    const btn = document.querySelector(`#jc-${bookingId} .job-action-btn`);
+    const btn = document.getElementById('start-btn-' + bookingId) ||
+                document.querySelector(`#jc-${bookingId} .job-action-btn`);
     if (btn) { btn.textContent = 'Updating…'; btn.disabled = true; }
+
+    const completionOtp = String(Math.floor(1000 + Math.random() * 9000));
+    const startedAt     = new Date().toISOString();
 
     const { error } = await sb
       .from('bookings')
-      .update({ status: 'In Progress' })
+      .update({ status: 'In Progress', started_at: startedAt, completion_otp: completionOtp })
       .eq('id', bookingId)
       .eq('vendor_id', vendorProfile.id);
 
@@ -909,12 +1086,13 @@
   }
 
   async function completeJob(bookingId) {
-    const btn = document.querySelector(`#jc-${bookingId} .job-action-btn`);
+    const btn = document.getElementById('complete-btn-' + bookingId) ||
+                document.querySelector(`#jc-${bookingId} .job-action-btn.complete`);
     if (btn) { btn.textContent = 'Completing…'; btn.disabled = true; }
 
     const { error } = await sb
       .from('bookings')
-      .update({ status: 'Completed' })
+      .update({ status: 'Completed', completed_at: new Date().toISOString() })
       .eq('id', bookingId)
       .eq('vendor_id', vendorProfile.id);
 

@@ -969,6 +969,21 @@ main {
   flex-wrap: wrap;
 }
 
+.btn-mbp-refresh {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 1rem;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-mbp-refresh:hover    { border-color: #1a1a1a; color: #1a1a1a; }
+.btn-mbp-refresh:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .mbp-title {
   font-size: 1.7rem;
   font-weight: 800;
@@ -1100,6 +1115,111 @@ main {
   color: var(--grey-text);
   border-top: 1px solid var(--grey-mid);
   background: #fafafa;
+}
+
+/* Live timer row on booking card */
+.bk-timer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+.bk-timer-icon { font-size: 0.9rem; }
+.bk-timer {
+  font-family: monospace;
+  font-size: 1rem;
+  color: #1d4ed8;
+  letter-spacing: 0.05em;
+}
+
+/* Star rating widget on completed booking card */
+.bk-rating-section {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: #fefce8;
+  border: 1.5px dashed #facc15;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.bk-rating-label { font-size: 0.82rem; font-weight: 600; color: #78350f; }
+.bk-stars { display: flex; gap: 0.25rem; }
+.bk-star {
+  font-size: 1.6rem;
+  cursor: pointer;
+  color: #d1d5db;
+  transition: color 0.1s, transform 0.1s;
+  line-height: 1;
+  user-select: none;
+}
+.bk-star.hovered, .bk-star.selected { color: #f59e0b; transform: scale(1.15); }
+.bk-rating-btn {
+  align-self: flex-start;
+  background: #f59e0b;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 7px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.bk-rating-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.bk-rating-btn:not(:disabled):hover { opacity: 0.85; }
+
+/* Already-rated display */
+.bk-rating-done {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.bk-rating-done-label { font-size: 0.8rem; color: #6b7280; font-weight: 600; }
+.star-display { font-size: 1.25rem; color: #d1d5db; line-height: 1; }
+.star-display.filled { color: #f59e0b; }
+.bk-rating-score { font-size: 0.82rem; font-weight: 700; color: #92400e; }
+
+/* OTP summary block on completed cards */
+.bk-otp-summary {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+.bk-otp-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+}
+.bk-otp-summary-label { font-size: 0.75rem; color: #15803d; font-weight: 600; }
+.bk-otp-summary-code  { font-family: monospace; font-size: 1.1rem; font-weight: 800; color: #15803d; letter-spacing: 0.15em; }
+
+/* OTP row on booking card */
+.bk-otp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  background: #fffbeb;
+  border: 1.5px dashed #f59e0b;
+  border-radius: 8px;
+}
+.bk-otp-label { font-size: 0.82rem; color: #92400e; }
+.bk-otp-code {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #b45309;
+  font-family: monospace;
 }
 
 /* Empty state */
@@ -1478,4 +1598,108 @@ main {
   .mem-card-front { font-size: 1rem; }
   .mem-card-back  { font-size: 1.4rem; }
   .game-view-wrap { padding: 1.5rem 1rem 3rem; }
+   CUSTOMER PROFILE PAGE
+══════════════════════════════════════════ */
+.cp-container {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 0 1rem 4rem;
+}
+
+.cp-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.cp-hero {
+  background: var(--black);
+  padding: 2.5rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.cp-avatar {
+  width: 80px; height: 80px;
+  background: var(--red);
+  color: #fff;
+  font-size: 1.75rem;
+  font-weight: 800;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  border: 3px solid rgba(255,255,255,0.15);
+}
+
+.cp-hero-info { display: flex; flex-direction: column; gap: 0.5rem; }
+.cp-name { color: #fff; font-size: 1.5rem; font-weight: 800; margin: 0; }
+.cp-badges { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+.cp-customer-badge {
+  display: inline-block;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+}
+
+.cp-since-tag { font-size: 0.82rem; font-weight: 600; color: #aaa; }
+
+.cp-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.cp-stat-card {
+  padding: 1.25rem 1rem;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.cp-stat-card:last-child { border-right: none; }
+
+.cp-stat-icon { font-size: 1.35rem; margin-bottom: 0.35rem; }
+.cp-stat-num  { font-size: 1.6rem; font-weight: 800; color: var(--black); line-height: 1.1; }
+.cp-stat-label { font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.2rem; }
+
+.cp-details { padding: 1.75rem 2rem; border-bottom: 1px solid var(--border); }
+.cp-edit-section { padding: 1.75rem 2rem 2rem; }
+
+.cp-section-title { font-size: 1rem; font-weight: 700; color: var(--black); margin-bottom: 1.25rem; }
+
+.cp-row { display: flex; align-items: center; gap: 1rem; padding: 0.65rem 0; border-bottom: 1px solid var(--border); }
+.cp-row:last-child { border-bottom: none; }
+.cp-row-label { font-size: 0.82rem; font-weight: 600; color: var(--muted); min-width: 140px; flex-shrink: 0; }
+.cp-row-value { font-size: 0.9rem; color: var(--text); }
+
+.cp-success-msg {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #15803d;
+  border-radius: 6px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.cp-edit-actions { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+
+@media (max-width: 600px) {
+  .cp-stats { grid-template-columns: repeat(2, 1fr); }
+  .cp-stat-card:nth-child(2) { border-right: none; }
+  .cp-hero { padding: 1.75rem 1.25rem; gap: 1.25rem; }
+  .cp-details, .cp-edit-section { padding: 1.25rem; }
+  .cp-row { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+  .cp-row-label { min-width: unset; }
 }

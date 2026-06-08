@@ -6,17 +6,17 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --red:        #e31e24;
-  --red-dark:   #b71c1c;
-  --black:      #111111;
+  --purple:     #7c3aed;
+  --purple-dark:#6d28d9;
+  --black:      #1e0a3c;
   --surface:    #ffffff;
-  --bg:         #f5f5f5;
+  --bg:         #f7f5ff;
   --border:     #e5e7eb;
   --text:       #1f2937;
   --muted:      #6b7280;
   --radius:     10px;
-  --shadow:     0 2px 12px rgba(0,0,0,0.09);
-  --shadow-lg:  0 6px 32px rgba(0,0,0,0.14);
+  --shadow:     0 2px 12px rgba(124,58,237,0.08);
+  --shadow-lg:  0 6px 32px rgba(124,58,237,0.16);
 }
 
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); }
@@ -46,7 +46,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 .logo-icon {
   width: 34px; height: 34px;
-  background: var(--red);
+  background: var(--purple);
   color: #fff;
   font-weight: 800;
   font-size: 1.1rem;
@@ -74,7 +74,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .btn-vlogin:hover { border-color: #fff; background: rgba(255,255,255,0.07); }
 
 .btn-vsignup {
-  background: var(--red);
+  background: var(--purple);
   border: none;
   color: #fff;
   padding: 0.42rem 1rem;
@@ -84,13 +84,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   cursor: pointer;
   transition: background 0.2s;
 }
-.btn-vsignup:hover { background: var(--red-dark); }
+.btn-vsignup:hover { background: var(--purple-dark); }
 
 .v-user-menu { display: flex; align-items: center; gap: 0.6rem; }
 
 .v-avatar {
   width: 32px; height: 32px;
-  background: var(--red);
+  background: var(--purple);
   color: #fff;
   font-weight: 700;
   font-size: 0.78rem;
@@ -118,7 +118,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   cursor: pointer;
   transition: 0.2s;
 }
-.btn-vlogout:hover { border-color: var(--red); color: var(--red); }
+.btn-vlogout:hover { border-color: var(--purple); color: var(--purple); }
 
 /* ══════════════════════════════════════════
    HEADER NAV (logged-in)
@@ -163,15 +163,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   outline: none;
 }
 .form-group input:focus,
-.form-group select:focus { border-color: var(--red); }
+.form-group select:focus { border-color: var(--purple); }
 .form-group.error input,
 .form-group.error select { border-color: #e74c3c; }
 .field-error { display: none; font-size: 0.75rem; color: #e74c3c; }
 .form-group.error .field-error { display: block; }
 
 .btn { display: block; width: 100%; padding: 0.75rem 1rem; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
-.btn-primary { background: var(--red); color: #fff; }
-.btn-primary:hover { background: var(--red-dark); }
+.btn-primary { background: var(--purple); color: #fff; }
+.btn-primary:hover { background: var(--purple-dark); }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* ══════════════════════════════════════════
@@ -179,7 +179,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 ══════════════════════════════════════════ */
 .auth-page {
   min-height: calc(100vh - 60px);
-  background: #111;
+  background: #1e0a3c;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -201,7 +201,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .auth-title {
   font-size: 1.45rem;
   font-weight: 800;
-  color: #111;
+  color: var(--black);
   text-align: center;
   margin-bottom: 0.35rem;
 }
@@ -243,7 +243,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   font-size: 0.84rem;
   color: var(--muted);
 }
-.auth-switch a { color: var(--red); font-weight: 600; text-decoration: none; }
+.auth-switch a { color: var(--purple); font-weight: 600; text-decoration: none; }
 
 .auth-back { text-align: center; margin-top: 0.5rem; font-size: 0.82rem; }
 .auth-back a { color: var(--muted); text-decoration: none; }
@@ -269,9 +269,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 .v-hero-badge {
   display: inline-block;
-  background: rgba(227,30,36,0.15);
-  color: #f87171;
-  border: 1px solid rgba(227,30,36,0.3);
+  background: rgba(124,58,237,0.15);
+  color: #c4b5fd;
+  border: 1px solid rgba(124,58,237,0.35);
   padding: 0.3rem 0.85rem;
   border-radius: 20px;
   font-size: 0.82rem;
@@ -292,7 +292,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .v-hero-cta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 
 .btn-vsignup-lg {
-  background: var(--red);
+  background: var(--purple);
   color: #fff;
   border: none;
   padding: 0.85rem 1.75rem;
@@ -302,7 +302,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   cursor: pointer;
   transition: background 0.2s;
 }
-.btn-vsignup-lg:hover { background: var(--red-dark); }
+.btn-vsignup-lg:hover { background: var(--purple-dark); }
 
 .btn-vlogin-lg {
   background: transparent;
@@ -320,8 +320,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .v-hero-visual { flex-shrink: 0; }
 
 .v-hero-card {
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: #2d1254;
+  border: 1px solid #4a1d8a;
   border-radius: 14px;
   padding: 1.5rem;
   width: 280px;
@@ -332,7 +332,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--red);
+  color: var(--purple);
   font-weight: 700;
   margin-bottom: 1rem;
 }
@@ -346,16 +346,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   justify-content: space-between;
   margin-top: 1.1rem;
   padding-top: 1rem;
-  border-top: 1px solid #333;
+  border-top: 1px solid #4a1d8a;
 }
 
 .vhc-badge { font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 20px; }
 .vhc-badge.scheduled { background: #eff6ff; color: #1d4ed8; }
 
-.vhc-btn { background: var(--red); color: #fff; border: none; padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+.vhc-btn { background: var(--purple); color: #fff; border: none; padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
 
 .v-land-section { padding: 4rem 2rem; }
-.v-land-dark { background: #1a1a1a; }
+.v-land-dark { background: #2d1254; }
 .v-land-container { max-width: 1100px; margin: 0 auto; }
 
 .v-section-title { font-size: 1.85rem; font-weight: 800; color: var(--black); text-align: center; margin-bottom: 0.5rem; }
@@ -378,12 +378,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 .v-trades { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; }
 
-.v-trade-card { background: #262626; border: 1px solid #333; border-radius: var(--radius); padding: 1.5rem; text-align: center; color: #eee; }
+.v-trade-card { background: #2d1254; border: 1px solid #4a1d8a; border-radius: var(--radius); padding: 1.5rem; text-align: center; color: #eee; }
 .v-trade-card span { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
 .v-trade-card strong { display: block; font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; color: #fff; }
 .v-trade-card p { color: #888; font-size: 0.83rem; }
 
-.v-land-cta { background: var(--red); padding: 4rem 2rem; }
+.v-land-cta { background: var(--purple); padding: 4rem 2rem; }
 .v-land-cta h2 { font-size: 2rem; font-weight: 900; color: #fff; margin-bottom: 0.5rem; }
 .v-land-cta p  { color: rgba(255,255,255,0.8); margin-bottom: 1.75rem; font-size: 1.05rem; }
 
@@ -418,7 +418,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   transition: 0.2s;
   flex-shrink: 0;
 }
-.btn-refresh:hover { border-color: var(--red); color: var(--red); }
+.btn-refresh:hover { border-color: var(--purple); color: var(--purple); }
 
 .vd-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.75rem; }
 
@@ -444,9 +444,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   gap: 0.5rem;
   transition: color 0.15s, border-color 0.15s;
 }
-.vd-tab.active { color: var(--red); border-bottom-color: var(--red); }
+.vd-tab.active { color: var(--purple); border-bottom-color: var(--purple); }
 
-.vd-tab-badge { background: var(--red); color: #fff; font-size: 0.68rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 8px; min-width: 18px; text-align: center; }
+.vd-tab-badge { background: var(--purple); color: #fff; font-size: 0.68rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 8px; min-width: 18px; text-align: center; }
 .vd-tab-badge:empty { display: none; }
 
 .vd-empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
@@ -488,6 +488,45 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .job-action-btn.start    { background: #1d4ed8; color: #fff; }
 .job-action-btn.complete { background: #15803d; color: #fff; }
 
+/* Live timer row inside job card body */
+.job-timer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+.job-timer-icon { font-size: 0.9rem; }
+.job-timer {
+  font-family: monospace;
+  font-size: 1rem;
+  color: #1d4ed8;
+  letter-spacing: 0.05em;
+}
+
+/* OTP verify row inside job card footer */
+.otp-verify-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.otp-input {
+  width: 130px;
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-align: center;
+  font-family: monospace;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.otp-input:focus { border-color: #1d4ed8; }
+.otp-input::placeholder { font-size: 0.75rem; letter-spacing: 0; font-weight: 400; font-family: inherit; }
+
 /* ══════════════════════════════════════════
    PROFILE PAGE
 ══════════════════════════════════════════ */
@@ -511,7 +550,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 .profile-avatar {
   width: 80px; height: 80px;
-  background: var(--red);
+  background: var(--purple);
   color: #fff;
   font-size: 1.75rem;
   font-weight: 800;
@@ -528,7 +567,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 .vendor-badge {
   display: inline-block;
-  background: var(--red);
+  background: var(--purple);
   color: #fff;
   font-size: 0.7rem;
   font-weight: 700;
@@ -599,7 +638,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   display: inline-block;
   width: 16px; height: 16px;
   border: 2px solid var(--border);
-  border-top-color: var(--red);
+  border-top-color: var(--purple);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   vertical-align: middle;
@@ -629,3 +668,25 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .vd-toast.show    { opacity: 1; transform: translateX(-50%) translateY(0); }
 .vd-toast.success { background: #15803d; }
 .vd-toast.error   { background: #b91c1c; }
+
+/* Star display (shared) */
+.star-display      { font-size: 1.15rem; color: #d1d5db; line-height: 1; }
+.star-display.filled { color: #f59e0b; }
+
+/* Customer rating row on completed vendor job card */
+.job-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+.job-rating-label { color: #6b7280; font-weight: 600; font-size: 0.8rem; }
+.job-rating-stars  { display: flex; gap: 0.1rem; }
+.job-rating-score  { font-weight: 700; color: #92400e; font-size: 0.82rem; }
+.job-rating-none   { color: #9ca3af; font-style: italic; font-size: 0.82rem; }
+
+/* Avg rating on vendor profile */
+.prof-rating-stars { display: inline-flex; gap: 0.1rem; vertical-align: middle; }
+.prof-rating-score { font-weight: 700; color: #92400e; margin-left: 0.3rem; }
+.prof-rating-count { color: #6b7280; font-size: 0.82rem; margin-left: 0.25rem; }
