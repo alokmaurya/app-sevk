@@ -1,0 +1,20 @@
+{
+  "appId": "com.sevk.customer",
+  "appName": "SEVK",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#111111"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#111111",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
+  }
+}
