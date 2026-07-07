@@ -39,6 +39,7 @@ jobs:
 
       - name: Copy web assets (Customer)
         run: |
+          mkdir -p android-apps/customer/www
           cp index.html  android-apps/customer/www/index.html
           cp style.css   android-apps/customer/www/style.css
 
@@ -98,6 +99,7 @@ jobs:
 
       - name: Copy web assets (Vendor)
         run: |
+          mkdir -p android-apps/vendor/www
           cp vendor.html android-apps/vendor/www/index.html
           cp vendor.css  android-apps/vendor/www/vendor.css
 
